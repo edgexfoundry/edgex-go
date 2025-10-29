@@ -174,12 +174,16 @@ func (p *fileTokenProvider) Run() error {
 		if ok {
 			if serviceConfig.FilePermissions != nil &&
 				(serviceConfig.FilePermissions).ModeOctal != nil {
-				mode, err := strconv.ParseInt(*(serviceConfig.FilePermissions).ModeOctal, 8, 32)
+				// Use ParseUint because file modes are non-negative.
+				// The bitSize of 32 correctly matches the underlying type of os.FileMode (uint32)
+				mode, err := strconv.ParseUint(*(serviceConfig.FilePermissions).ModeOctal, 8, 32)
 				if err != nil {
 					_ = writeCloser.Close()
 					p.logger.Errorf("invalid file mode %s: %s", *(serviceConfig.FilePermissions).ModeOctal, err.Error())
 					return err
 				}
+				// The conversion from uint64 (returned by ParseUint) to os.FileMode (uint32) is now safe,
+				// because ParseUint guarantees the value will fit within the specified bitSize (32)
 				if err := permissionable.Chmod(os.FileMode(mode)); err != nil {
 					_ = writeCloser.Close()
 					p.logger.Errorf("failed to set file mode on %s: %s", outputTokenFilename, err.Error())

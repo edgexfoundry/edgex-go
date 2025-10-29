@@ -502,7 +502,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("UpdateDeviceProfile", deviceProfileModel).Return(nil)
 	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
-	dbClientMock.On("DeviceCountByProfileName", deviceProfileModel.Name).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", deviceProfileModel.Name).Return(int64(1), nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, deviceProfileModel.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
 	dbClientMock.On("DeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, nil)
 	dbClientMock.On("DeviceProfileByName", deviceProfileModel.Name).Return(deviceProfileModel, nil)
@@ -644,7 +644,7 @@ func TestPatchDeviceProfileBasicInfo(t *testing.T) {
 	dbClientMock.On("DeviceProfileByName", *valid.BasicInfo.Name).Return(dpModel, nil)
 	dbClientMock.On("DeviceProfileByName", notFoundName).Return(dpModel, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "not found", nil))
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
-	dbClientMock.On("DeviceCountByProfileName", *valid.BasicInfo.Name).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", *valid.BasicInfo.Name).Return(int64(1), nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, *valid.BasicInfo.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -946,12 +946,12 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("UpdateDeviceProfile", validDeviceProfileModel).Return(nil)
 	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
-	dbClientMock.On("DeviceCountByProfileName", validDeviceProfileModel.Name).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", validDeviceProfileModel.Name).Return(int64(1), nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, validDeviceProfileModel.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
 	dbClientMock.On("DeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, nil)
 	dbClientMock.On("DeviceProfileByName", validDeviceProfileModel.Name).Return(validDeviceProfileModel, nil)
-	dbClientMock.On("DeviceCountByProfileName", validDeviceProfileModel.Name).Return(uint32(0), nil)
-	dbClientMock.On("DeviceCountByProfileName", notFoundDeviceProfileModel.Name).Return(uint32(0), nil)
+	dbClientMock.On("DeviceCountByProfileName", validDeviceProfileModel.Name).Return(int64(0), nil)
+	dbClientMock.On("DeviceCountByProfileName", notFoundDeviceProfileModel.Name).Return(int64(0), nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -1221,7 +1221,7 @@ func TestDeleteDeviceProfileByName_StrictProfileChanges(t *testing.T) {
 func TestAllDeviceProfiles(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
-	expectedTotalProfileCount := uint32(3)
+	expectedTotalProfileCount := int64(3)
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
@@ -1246,7 +1246,7 @@ func TestAllDeviceProfiles(t *testing.T) {
 		labels             string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get device profiles without labels", "0", "10", "", false, 3, expectedTotalProfileCount, http.StatusOK},
@@ -1300,7 +1300,7 @@ func TestAllDeviceProfiles(t *testing.T) {
 func TestDeviceProfilesByModel(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
-	expectedTotalProfileCount := uint32(3)
+	expectedTotalProfileCount := int64(3)
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
@@ -1323,7 +1323,7 @@ func TestDeviceProfilesByModel(t *testing.T) {
 		model              string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get device profiles by model", "0", "10", TestModel, false, 3, expectedTotalProfileCount, http.StatusOK},
@@ -1376,7 +1376,7 @@ func TestDeviceProfilesByModel(t *testing.T) {
 func TestDeviceProfilesByManufacturer(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
-	expectedTotalProfileCount := uint32(3)
+	expectedTotalProfileCount := int64(3)
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
@@ -1399,7 +1399,7 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 		manufacturer       string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get device profiles by manufacturer", "0", "10", TestManufacturer, false, 3, expectedTotalProfileCount, http.StatusOK},
@@ -1452,7 +1452,7 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
-	expectedTotalProfileCount := uint32(3)
+	expectedTotalProfileCount := int64(3)
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
@@ -1476,7 +1476,7 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 		model              string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get device profiles by manufacturer and model", "0", "10", TestManufacturer, TestModel, false, 3, expectedTotalProfileCount, http.StatusOK},
@@ -1530,7 +1530,7 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 func TestAllDeviceProfileBasicInfos(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
-	expectedTotalProfileCount := uint32(3)
+	expectedTotalProfileCount := int64(3)
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
@@ -1555,7 +1555,7 @@ func TestAllDeviceProfileBasicInfos(t *testing.T) {
 		labels             string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get device profile basic infos without labels", "0", "10", "", false, 3, expectedTotalProfileCount, http.StatusOK},

@@ -24,11 +24,11 @@ type DBClient interface {
 	DeviceProfilesByModel(offset int, limit int, model string) ([]model.DeviceProfile, errors.EdgeX)
 	DeviceProfilesByManufacturer(offset int, limit int, manufacturer string) ([]model.DeviceProfile, errors.EdgeX)
 	DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) ([]model.DeviceProfile, errors.EdgeX)
-	DeviceProfileCountByLabels(labels []string) (uint32, errors.EdgeX)
-	DeviceProfileCountByManufacturer(manufacturer string) (uint32, errors.EdgeX)
-	DeviceProfileCountByModel(model string) (uint32, errors.EdgeX)
-	DeviceProfileCountByManufacturerAndModel(manufacturer string, model string) (uint32, errors.EdgeX)
-	InUseResourceCount() (uint32, errors.EdgeX)
+	DeviceProfileCountByLabels(labels []string) (int64, errors.EdgeX)
+	DeviceProfileCountByManufacturer(manufacturer string) (int64, errors.EdgeX)
+	DeviceProfileCountByModel(model string) (int64, errors.EdgeX)
+	DeviceProfileCountByManufacturerAndModel(manufacturer string, model string) (int64, errors.EdgeX)
+	InUseResourceCount() (int64, errors.EdgeX)
 
 	AddDeviceService(ds model.DeviceService) (model.DeviceService, errors.EdgeX)
 	DeviceServiceById(id string) (model.DeviceService, errors.EdgeX)
@@ -38,7 +38,7 @@ type DBClient interface {
 	DeviceServiceNameExists(name string) (bool, errors.EdgeX)
 	AllDeviceServices(offset int, limit int, labels []string) ([]model.DeviceService, errors.EdgeX)
 	UpdateDeviceService(ds model.DeviceService) errors.EdgeX
-	DeviceServiceCountByLabels(labels []string) (uint32, errors.EdgeX)
+	DeviceServiceCountByLabels(labels []string) (int64, errors.EdgeX)
 
 	AddDevice(d model.Device) (model.Device, errors.EdgeX)
 	DeleteDeviceById(id string) errors.EdgeX
@@ -51,10 +51,10 @@ type DBClient interface {
 	AllDevices(offset int, limit int, labels []string) ([]model.Device, errors.EdgeX)
 	DevicesByProfileName(offset int, limit int, profileName string) ([]model.Device, errors.EdgeX)
 	UpdateDevice(d model.Device) errors.EdgeX
-	DeviceCountByLabels(labels []string) (uint32, errors.EdgeX)
-	DeviceCountByProfileName(profileName string) (uint32, errors.EdgeX)
-	DeviceCountByServiceName(serviceName string) (uint32, errors.EdgeX)
-	DeviceTree(parent string, levels int, offset int, limit int, labels []string) (uint32, []model.Device, errors.EdgeX)
+	DeviceCountByLabels(labels []string) (int64, errors.EdgeX)
+	DeviceCountByProfileName(profileName string) (int64, errors.EdgeX)
+	DeviceCountByServiceName(serviceName string) (int64, errors.EdgeX)
+	DeviceTree(parent string, levels int, offset int, limit int, labels []string) (int64, []model.Device, errors.EdgeX)
 	AddProvisionWatcher(pw model.ProvisionWatcher) (model.ProvisionWatcher, errors.EdgeX)
 	ProvisionWatcherById(id string) (model.ProvisionWatcher, errors.EdgeX)
 	ProvisionWatcherByName(name string) (model.ProvisionWatcher, errors.EdgeX)
@@ -63,7 +63,7 @@ type DBClient interface {
 	AllProvisionWatchers(offset int, limit int, labels []string) ([]model.ProvisionWatcher, errors.EdgeX)
 	DeleteProvisionWatcherByName(name string) errors.EdgeX
 	UpdateProvisionWatcher(pw model.ProvisionWatcher) errors.EdgeX
-	ProvisionWatcherCountByLabels(labels []string) (uint32, errors.EdgeX)
-	ProvisionWatcherCountByServiceName(name string) (uint32, errors.EdgeX)
-	ProvisionWatcherCountByProfileName(name string) (uint32, errors.EdgeX)
+	ProvisionWatcherCountByLabels(labels []string) (int64, errors.EdgeX)
+	ProvisionWatcherCountByServiceName(name string) (int64, errors.EdgeX)
+	ProvisionWatcherCountByProfileName(name string) (int64, errors.EdgeX)
 }

@@ -93,7 +93,7 @@ func connPoolConConfig(config db.Configuration, lc logger.LoggingClient) (*pgxpo
 	if err != nil {
 		return nil, WrapDBError("fail to parse pg connection string", err)
 	}
-	connPoolConfig.MaxConns = int32(config.MaxConns)
+	connPoolConfig.MaxConns = config.MaxConns
 	if connPoolConfig.MaxConns <= 0 {
 		lc.Errorf("The MaxConns too small, use default '%d'", defaultMaxConns)
 		connPoolConfig.MaxConns = defaultMaxConns

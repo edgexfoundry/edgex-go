@@ -40,10 +40,10 @@ func TestPurgeNotification(t *testing.T) {
 
 	tests := []struct {
 		name              string
-		notificationCount uint32
+		notificationCount int64
 	}{
-		{"invoke notification purging", configuration.Retention.MaxCap},
-		{"not invoke notification purging", configuration.Retention.MinCap},
+		{"invoke notification purging", int64(configuration.Retention.MaxCap)},
+		{"not invoke notification purging", int64(configuration.Retention.MinCap)},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -59,7 +59,7 @@ func TestPurgeNotification(t *testing.T) {
 			})
 			err := purgeNotification(dic)
 			require.NoError(t, err)
-			if testCase.notificationCount >= configuration.Retention.MaxCap {
+			if testCase.notificationCount >= int64(configuration.Retention.MaxCap) {
 				dbClientMock.AssertCalled(t, "CleanupNotificationsByAge", mock.Anything)
 			} else {
 				dbClientMock.AssertNotCalled(t, "CleanupNotificationsByAge", mock.Anything)

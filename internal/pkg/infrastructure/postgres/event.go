@@ -123,25 +123,25 @@ func (c *Client) EventById(id string) (model.Event, errors.EdgeX) {
 }
 
 // EventTotalCount returns the total count of Event from db
-func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
+func (c *Client) EventTotalCount() (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountEvent())
 }
 
 // EventCountByDeviceName returns the count of Event associated a specific Device from db
-func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
+func (c *Client) EventCountByDeviceName(deviceName string) (int64, errors.EdgeX) {
 	sqlStatement := sqlQueryCountEventByCol(deviceNameCol)
 
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, pgx.NamedArgs{deviceNameCol: deviceName})
 }
 
 // EventCountByTimeRange returns the count of Event by time range from db
-func (c *Client) EventCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) EventCountByTimeRange(start int64, end int64) (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountEventByTimeRangeCol(originCol, nil), pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end})
 }
 
 // EventCountByDeviceNameAndSourceNameAndLimit returns the count of Event by deviceName, resourceName, and limit from db
 // this is used to check whether the event number is reach the event retention maxCap
-func (c *Client) EventCountByDeviceNameAndSourceNameAndLimit(deviceName, sourceName string, limit int) (uint32, errors.EdgeX) {
+func (c *Client) EventCountByDeviceNameAndSourceNameAndLimit(deviceName, sourceName string, limit int) (int64, errors.EdgeX) {
 	sqlStatement := sqlCountEventByDeviceNameAndSourceNameAndLimit()
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, pgx.NamedArgs{deviceNameCol: deviceName, sourceNameCol: sourceName, limitCondition: limit})
 }
@@ -361,8 +361,12 @@ func deleteEvents(ctx context.Context, tx pgx.Tx, sqlStatement string, args pgx.
 	return nil
 }
 
-func (c *Client) LatestEventByDeviceNameAndSourceNameAndOffset(deviceName, sourceName string, offset uint32) (model.Event, errors.EdgeX) {
+func (c *Client) LatestEventByDeviceNameAndSourceNameAndOffset(deviceName, sourceName string, offset int64) (model.Event, errors.EdgeX) {
 	ctx := context.Background()
+
+	if err := validateDatabaseOffset(offset); err != nil {
+		return model.Event{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "invalid offset", err)
+	}
 
 	events, err := queryEvents(
 		ctx, c.ConnPool,
@@ -380,8 +384,13 @@ func (c *Client) LatestEventByDeviceNameAndSourceNameAndOffset(deviceName, sourc
 }
 
 // LatestEventByDeviceNameAndSourceNameAndAgeAndOffset query an event with specified conditions and age and offset
-func (c *Client) LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName, sourceName string, age int64, offset uint32) (model.Event, errors.EdgeX) {
+func (c *Client) LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName, sourceName string, age int64, offset int64) (model.Event, errors.EdgeX) {
 	ctx := context.Background()
+
+	if err := validateDatabaseOffset(offset); err != nil {
+		return model.Event{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "invalid offset", err)
+	}
+
 	expireTimestamp := time.Now().UnixNano() - age
 
 	sqlStmt := sqlQueryAllEventAndDescWithCondsAndPagAndUpperLimitTime(originCol, originCol, deviceNameCol, sourceNameCol)
@@ -400,4 +409,13 @@ func (c *Client) LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName,
 		return model.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("no event found with offset '%d'", offset), err)
 	}
 	return events[0], nil
+}
+
+func validateDatabaseOffset(offset int64) error {
+	// A database offset cannot be negative, so returning error when the offset is negative
+	if offset < 0 {
+		// Return an error or handle this case appropriately. Do not proceed.
+		return fmt.Errorf("found negative database offset '%d'", offset)
+	}
+	return nil
 }

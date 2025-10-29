@@ -206,7 +206,7 @@ func (c *Client) UpdateNotificationAckStatusByIds(ack bool, ids []string) errors
 }
 
 // NotificationCountByCategory returns the count of notifications by category
-func (c *Client) NotificationCountByCategory(category string, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByCategory(category string, ack string) (int64, errors.EdgeX) {
 	queryObj := map[string]any{categoryField: category}
 	if len(ack) != 0 {
 		queryObj[acknowledgedField] = cast.ToBool(ack)
@@ -215,7 +215,7 @@ func (c *Client) NotificationCountByCategory(category string, ack string) (uint3
 }
 
 // NotificationCountByLabel returns the count of notifications by label
-func (c *Client) NotificationCountByLabel(label string, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByLabel(label string, ack string) (int64, errors.EdgeX) {
 	queryObj := map[string]any{labelsField: []string{label}}
 	if len(ack) != 0 {
 		queryObj[acknowledgedField] = cast.ToBool(ack)
@@ -224,7 +224,7 @@ func (c *Client) NotificationCountByLabel(label string, ack string) (uint32, err
 }
 
 // NotificationCountByStatus returns the count of notifications by status
-func (c *Client) NotificationCountByStatus(status string, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByStatus(status string, ack string) (int64, errors.EdgeX) {
 	queryObj := map[string]any{statusField: status}
 	if len(ack) != 0 {
 		queryObj[acknowledgedField] = cast.ToBool(ack)
@@ -233,34 +233,34 @@ func (c *Client) NotificationCountByStatus(status string, ack string) (uint32, e
 }
 
 // NotificationCountByTimeRange returns the count of notifications by time range
-func (c *Client) NotificationCountByTimeRange(start int64, end int64, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByTimeRange(start int64, end int64, ack string) (int64, errors.EdgeX) {
 	notifications, err := notificationsByTimeRange(c.ConnPool, start, end, 0, -1, ack)
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
 	}
-	return uint32(len(notifications)), nil
+	return int64(len(notifications)), nil
 }
 
 // NotificationCountByCategoriesAndLabels returns the count of notifications by categories and labels
-func (c *Client) NotificationCountByCategoriesAndLabels(categories []string, labels []string, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByCategoriesAndLabels(categories []string, labels []string, ack string) (int64, errors.EdgeX) {
 	notifications, err := notificationsByCategoriesAndLabels(c.ConnPool, 0, -1, categories, labels, ack)
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
 	}
-	return uint32(len(notifications)), nil
+	return int64(len(notifications)), nil
 }
 
 // NotificationCountByQueryConditions returns the count of notifications by query conditions
-func (c *Client) NotificationCountByQueryConditions(condition requests.NotificationQueryCondition, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByQueryConditions(condition requests.NotificationQueryCondition, ack string) (int64, errors.EdgeX) {
 	notifications, err := notificationsByQueryConditions(c.ConnPool, 0, -1, condition, ack)
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
 	}
-	return uint32(len(notifications)), nil
+	return int64(len(notifications)), nil
 }
 
 // NotificationTotalCount returns the total count of notifications
-func (c *Client) NotificationTotalCount() (uint32, errors.EdgeX) {
+func (c *Client) NotificationTotalCount() (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCount(notificationTableName))
 }
 

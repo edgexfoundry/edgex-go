@@ -108,7 +108,7 @@ func TestTransmissionById(t *testing.T) {
 }
 
 func TestTransmissionsByTimeRange(t *testing.T) {
-	expectedTransmissionCount := uint32(0)
+	expectedTransmissionCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("TransmissionCountByTimeRange", int64(0), int64(100)).Return(expectedTransmissionCount, nil)
@@ -129,7 +129,7 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, expectedTransmissionCount, http.StatusOK},
@@ -186,7 +186,7 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 func TestAllTransmissions(t *testing.T) {
 	trans := transmissionData()
 	transmissions := []models.Transmission{trans, trans, trans}
-	expectedTransmissionCount := uint32(len(transmissions))
+	expectedTransmissionCount := int64(len(transmissions))
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -208,7 +208,7 @@ func TestAllTransmissions(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get transmissions without offset and limit", "", "", false, 3, expectedTransmissionCount, http.StatusOK},
@@ -261,7 +261,7 @@ func TestAllTransmissions(t *testing.T) {
 
 func TestTransmissionsByStatus(t *testing.T) {
 	testStatus := models.New
-	expectedTransmissionCount := uint32(0)
+	expectedTransmissionCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("TransmissionCountByStatus", testStatus).Return(expectedTransmissionCount, nil)
@@ -281,7 +281,7 @@ func TestTransmissionsByStatus(t *testing.T) {
 		limit              string
 		status             string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get transmissions without offset, and limit", "", "", testStatus, false, expectedTransmissionCount, http.StatusOK},
@@ -395,7 +395,7 @@ func TestDeleteTransmissionsByAge(t *testing.T) {
 
 func TestTransmissionsBySubscriptionName(t *testing.T) {
 	testName := "testName"
-	expectedTransmissionCount := uint32(0)
+	expectedTransmissionCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("TransmissionCountBySubscriptionName", testName).Return(expectedTransmissionCount, nil)
@@ -415,7 +415,7 @@ func TestTransmissionsBySubscriptionName(t *testing.T) {
 		limit              string
 		subscriptionName   string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get transmissions without offset, and limit", "", "", testName, false, expectedTransmissionCount, http.StatusOK},
@@ -471,7 +471,7 @@ func TestTransmissionsBySubscriptionName(t *testing.T) {
 
 func TestTransmissionsByNotificationId(t *testing.T) {
 	testId := "id"
-	expectedTransmissionCount := uint32(0)
+	expectedTransmissionCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("TransmissionCountByNotificationId", testId).Return(expectedTransmissionCount, nil)
@@ -491,7 +491,7 @@ func TestTransmissionsByNotificationId(t *testing.T) {
 		limit              string
 		notificationId     string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get transmissions without offset, and limit", "", "", testId, false, expectedTransmissionCount, http.StatusOK},

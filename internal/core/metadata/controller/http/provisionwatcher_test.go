@@ -368,8 +368,8 @@ func TestProvisionWatcherController_ProvisionWatchersByServiceName(t *testing.T)
 	pw3WithServiceB.ServiceName = testServiceB
 
 	provisionWatchers := []models.ProvisionWatcher{pw1WithServiceA, pw2WithServiceA, pw3WithServiceB}
-	expectedTotalCountServiceA := uint32(2)
-	expectedTotalCountServiceB := uint32(1)
+	expectedTotalCountServiceA := int64(2)
+	expectedTotalCountServiceB := int64(1)
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
@@ -393,7 +393,7 @@ func TestProvisionWatcherController_ProvisionWatchersByServiceName(t *testing.T)
 		serviceName        string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get provision watchers with serviceName", "0", "5", testServiceA, false, 2, expectedTotalCountServiceA, http.StatusOK},
@@ -455,8 +455,8 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 	pw3WithProfileB.DiscoveredDevice.ProfileName = testProfileB
 
 	provisionWatchers := []models.ProvisionWatcher{pw1WithProfileA, pw2WithProfileA, pw3WithProfileB}
-	expectedTotalPWCountProfileA := uint32(2)
-	expectedTotalPWCountProfileB := uint32(1)
+	expectedTotalPWCountProfileA := int64(2)
+	expectedTotalPWCountProfileB := int64(1)
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("ProvisionWatcherCountByProfileName", testProfileA).Return(expectedTotalPWCountProfileA, nil)
@@ -480,7 +480,7 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 		profileName        string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get provision watchers with profileName", "0", "5", testProfileA, false, 2, expectedTotalPWCountProfileA, http.StatusOK},
@@ -533,7 +533,7 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 	provisionWatcher := dtos.ToProvisionWatcherModel(buildTestAddProvisionWatcherRequest().ProvisionWatcher)
 	provisionWatchers := []models.ProvisionWatcher{provisionWatcher, provisionWatcher, provisionWatcher}
-	expectedTotalPWCount := uint32(len(provisionWatchers))
+	expectedTotalPWCount := int64(len(provisionWatchers))
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
@@ -558,7 +558,7 @@ func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 		labels             string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get provision watchers without labels", "0", "10", "", false, 3, expectedTotalPWCount, http.StatusOK},

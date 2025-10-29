@@ -150,13 +150,13 @@ func (cs *Certs) getCertPair() (*CertPair, error) {
 }
 
 func (cs *Certs) ReadFrom(certPath string, keyPath string) (*CertPair, error) {
-	certPEMBlock, err := os.ReadFile(certPath)
+	certPEMBlock, err := os.ReadFile(certPath) // #nosec G304 -- certPath is controlled and validated internally
 	if err != nil {
 		return nil, err
 	}
 	cert := string(certPEMBlock)
 
-	keyPEMBlock, err := os.ReadFile(keyPath)
+	keyPEMBlock, err := os.ReadFile(keyPath) // #nosec G304 -- keyPath is controlled and validated internally
 	if err != nil {
 		return nil, err
 	}

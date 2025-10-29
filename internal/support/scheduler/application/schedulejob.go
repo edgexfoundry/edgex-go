@@ -85,7 +85,7 @@ func ScheduleJobByName(ctx context.Context, name string, dic *di.Container) (dto
 }
 
 // AllScheduleJobs queries all the schedule jobs with offset and limit
-func AllScheduleJobs(ctx context.Context, labels []string, offset, limit int, dic *di.Container) (scheduleJobDTOs []dtos.ScheduleJob, totalCount uint32, err errors.EdgeX) {
+func AllScheduleJobs(ctx context.Context, labels []string, offset, limit int, dic *di.Container) (scheduleJobDTOs []dtos.ScheduleJob, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.ScheduleJobTotalCount(ctx, labels)

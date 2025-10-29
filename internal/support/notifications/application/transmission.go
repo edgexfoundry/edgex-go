@@ -35,7 +35,7 @@ func TransmissionById(id string, dic *di.Container) (trans dtos.Transmission, ed
 }
 
 // TransmissionsByTimeRange query transmissions with offset, limit and time range
-func TransmissionsByTimeRange(start int64, end int64, offset int, limit int, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
+func TransmissionsByTimeRange(start int64, end int64, offset int, limit int, dic *di.Container) (transmissions []dtos.Transmission, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.TransmissionCountByTimeRange(start, end)
@@ -59,7 +59,7 @@ func TransmissionsByTimeRange(start int64, end int64, offset int, limit int, dic
 }
 
 // AllTransmissions queries transmissions by offset and limit
-func AllTransmissions(offset, limit int, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
+func AllTransmissions(offset, limit int, dic *di.Container) (transmissions []dtos.Transmission, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.TransmissionTotalCount()
@@ -83,7 +83,7 @@ func AllTransmissions(offset, limit int, dic *di.Container) (transmissions []dto
 }
 
 // TransmissionsByStatus queries transmissions with offset, limit, and status
-func TransmissionsByStatus(offset, limit int, status string, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
+func TransmissionsByStatus(offset, limit int, status string, dic *di.Container) (transmissions []dtos.Transmission, totalCount int64, err errors.EdgeX) {
 	if status == "" {
 		return transmissions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
 	}
@@ -118,7 +118,7 @@ func DeleteProcessedTransmissionsByAge(age int64, dic *di.Container) errors.Edge
 }
 
 // TransmissionsBySubscriptionName queries transmissions with offset, limit, and subscription name
-func TransmissionsBySubscriptionName(offset, limit int, subscriptionName string, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
+func TransmissionsBySubscriptionName(offset, limit int, subscriptionName string, dic *di.Container) (transmissions []dtos.Transmission, totalCount int64, err errors.EdgeX) {
 	if subscriptionName == "" {
 		return transmissions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscription name is empty", nil)
 	}
@@ -141,7 +141,7 @@ func TransmissionsBySubscriptionName(offset, limit int, subscriptionName string,
 }
 
 // TransmissionsByNotificationId queries transmissions with offset, limit, and notification id
-func TransmissionsByNotificationId(offset, limit int, notificationId string, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
+func TransmissionsByNotificationId(offset, limit int, notificationId string, dic *di.Container) (transmissions []dtos.Transmission, totalCount int64, err errors.EdgeX) {
 	if notificationId == "" {
 		return transmissions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "notification id is empty", nil)
 	}

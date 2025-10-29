@@ -26,7 +26,7 @@ func checkCapacityWithNewDevice(d models.Device, dic *di.Container) errors.EdgeX
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.Kind(err), "query device count failed", err)
 		}
-		if deviceCount+1 > config.Writable.MaxDevices {
+		if deviceCount+1 > int64(config.Writable.MaxDevices) {
 			return errors.NewCommonEdgeX(
 				errors.KindContractInvalid,
 				fmt.Sprintf("the existing total number of device is '%d', add device '%s' will exceed the maximum limitation '%d'", deviceCount, d.Name, config.Writable.MaxDevices), nil)
@@ -41,7 +41,7 @@ func checkCapacityWithNewDevice(d models.Device, dic *di.Container) errors.EdgeX
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.Kind(err), "get resource count failed", err)
 		}
-		if totalInUseResourceCount+newResourceCount > config.Writable.MaxResources {
+		if totalInUseResourceCount+newResourceCount > int64(config.Writable.MaxResources) {
 			return errors.NewCommonEdgeX(
 				errors.KindContractInvalid,
 				fmt.Sprintf("'%d' resources is in use, increase '%d' resources will exceed the maximum limitation '%d'", totalInUseResourceCount, newResourceCount, config.Writable.MaxResources), nil)
@@ -72,7 +72,7 @@ func checkResourceCapacityByExistingAndNewProfile(oldProfileName, newProfileName
 			return errors.NewCommonEdgeX(errors.Kind(err), "query in use resource count failed", err)
 		}
 		count := totalInUseResourceCount - oldProfileResourceCount + newProfileResourceCount
-		if count > config.Writable.MaxResources {
+		if count > int64(config.Writable.MaxResources) {
 			return errors.NewCommonEdgeX(
 				errors.KindContractInvalid,
 				fmt.Sprintf(
@@ -103,9 +103,9 @@ func checkResourceCapacityByUpdateProfile(profile models.DeviceProfile, dic *di.
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.Kind(err), "query existing profile resource count failed", err)
 		}
-		newProfileResourceCount := uint32(len(profile.DeviceResources))
+		newProfileResourceCount := int64(len(profile.DeviceResources))
 		count := totalInUseResourceCount - existingProfileResourceCount + newProfileResourceCount
-		if count > config.Writable.MaxResources {
+		if count > int64(config.Writable.MaxResources) {
 			return errors.NewCommonEdgeX(
 				errors.KindContractInvalid,
 				fmt.Sprintf(
@@ -132,7 +132,7 @@ func checkResourceCapacityByNewResource(profileName string, resource models.Devi
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.Kind(err), "query in use resource count failed", err)
 		}
-		if totalInUseResourceCount+1 > config.Writable.MaxResources {
+		if totalInUseResourceCount+1 > int64(config.Writable.MaxResources) {
 			return errors.NewCommonEdgeX(
 				errors.KindContractInvalid,
 				fmt.Sprintf(
@@ -143,7 +143,7 @@ func checkResourceCapacityByNewResource(profileName string, resource models.Devi
 	return nil
 }
 
-func resourceCountByProfile(profileName string, dic *di.Container) (uint32, errors.EdgeX) {
+func resourceCountByProfile(profileName string, dic *di.Container) (int64, errors.EdgeX) {
 	if profileName == "" {
 		return 0, nil
 	}
@@ -152,5 +152,5 @@ func resourceCountByProfile(profileName string, dic *di.Container) (uint32, erro
 	if err != nil {
 		return 0, errors.NewCommonEdgeX(errors.Kind(err), "count resource number failed", err)
 	}
-	return uint32(len(profile.DeviceResources)), nil
+	return int64(len(profile.DeviceResources)), nil
 }

@@ -26,7 +26,7 @@ import (
 
 func TestAllReadings(t *testing.T) {
 	readings := buildReadings()
-	totalCount := uint32(len(readings))
+	totalCount := int64(len(readings))
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
@@ -48,7 +48,7 @@ func TestAllReadings(t *testing.T) {
 		errorExpected      bool
 		ExpectedErrKind    errors.ErrKind
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - all readings", 0, 20, false, "", len(readings), totalCount, http.StatusOK},
@@ -73,8 +73,8 @@ func TestAllReadings(t *testing.T) {
 
 func TestReadingsByTimeRange(t *testing.T) {
 	readings := buildReadings()
-	totalCount5 := uint32(5)
-	totalCount3 := uint32(3)
+	totalCount5 := int64(5)
+	totalCount3 := int64(3)
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
@@ -101,13 +101,13 @@ func TestReadingsByTimeRange(t *testing.T) {
 		errorExpected      bool
 		ExpectedErrKind    errors.ErrKind
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - all readings", readings[0].GetBaseReading().Origin, readings[4].GetBaseReading().Origin, 0, 10, false, "", 5, totalCount5, http.StatusOK},
 		{"Valid - readings trimmed by latest and oldest", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin, 0, 10, false, "", 3, totalCount3, http.StatusOK},
 		{"Valid - readings trimmed by latest and oldest and skipped first", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin, 1, 2, false, "", 2, totalCount3, http.StatusOK},
-		{"Invalid - bounds out of range", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin, 4, 2, true, errors.KindRangeNotSatisfiable, 0, uint32(0), http.StatusRequestedRangeNotSatisfiable},
+		{"Invalid - bounds out of range", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin, 4, 2, true, errors.KindRangeNotSatisfiable, 0, int64(0), http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -128,7 +128,7 @@ func TestReadingsByTimeRange(t *testing.T) {
 
 func TestReadingsByResourceName(t *testing.T) {
 	readings := buildReadings()
-	totalCount := uint32(len(readings))
+	totalCount := int64(len(readings))
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
@@ -151,7 +151,7 @@ func TestReadingsByResourceName(t *testing.T) {
 		errorExpected      bool
 		ExpectedErrKind    errors.ErrKind
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - all readings", 0, 20, testDeviceResourceName, false, "", len(readings), totalCount, http.StatusOK},
@@ -177,7 +177,7 @@ func TestReadingsByResourceName(t *testing.T) {
 
 func TestReadingsByDeviceName(t *testing.T) {
 	readings := buildReadings()
-	totalCount := uint32(len(readings))
+	totalCount := int64(len(readings))
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
@@ -200,7 +200,7 @@ func TestReadingsByDeviceName(t *testing.T) {
 		errorExpected      bool
 		ExpectedErrKind    errors.ErrKind
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - all readings", 0, 20, testDeviceName, false, "", len(readings), totalCount, http.StatusOK},
@@ -224,7 +224,7 @@ func TestReadingsByDeviceName(t *testing.T) {
 }
 
 func TestReadingCountByDeviceName(t *testing.T) {
-	expectedReadingCount := uint32(656672)
+	expectedReadingCount := int64(656672)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByDeviceName", testDeviceName).Return(expectedReadingCount, nil)
@@ -241,7 +241,7 @@ func TestReadingCountByDeviceName(t *testing.T) {
 		deviceName         string
 		errorExpected      bool
 		ExpectedErrKind    errors.ErrKind
-		expectedCount      uint32
+		expectedCount      int64
 		expectedStatusCode int
 	}{
 		{"Valid - all readings", testDeviceName, false, "", expectedReadingCount, http.StatusOK},

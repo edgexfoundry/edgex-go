@@ -221,7 +221,7 @@ func TestNotificationById(t *testing.T) {
 
 func TestNotificationsByCategory(t *testing.T) {
 	testCategory := "category"
-	expectedNotificationCount := uint32(0)
+	expectedNotificationCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("NotificationCountByCategory", testCategory, "").Return(expectedNotificationCount, nil)
@@ -241,7 +241,7 @@ func TestNotificationsByCategory(t *testing.T) {
 		limit              string
 		category           string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get notifications without offset, and limit", "", "", testCategory, false, expectedNotificationCount, http.StatusOK},
@@ -296,7 +296,7 @@ func TestNotificationsByCategory(t *testing.T) {
 
 func TestNotificationsByLabel(t *testing.T) {
 	testLabel := "label"
-	expectedNotificationCount := uint32(0)
+	expectedNotificationCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("NotificationCountByLabel", testLabel, "").Return(expectedNotificationCount, nil)
@@ -316,7 +316,7 @@ func TestNotificationsByLabel(t *testing.T) {
 		limit              string
 		label              string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get notifications without offset, and limit", "", "", testLabel, false, expectedNotificationCount, http.StatusOK},
@@ -371,7 +371,7 @@ func TestNotificationsByLabel(t *testing.T) {
 
 func TestNotificationsByStatus(t *testing.T) {
 	testStatus := models.New
-	expectedNotificationCount := uint32(0)
+	expectedNotificationCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("NotificationCountByStatus", testStatus, "").Return(expectedNotificationCount, nil)
@@ -391,7 +391,7 @@ func TestNotificationsByStatus(t *testing.T) {
 		limit              string
 		status             string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get notifications without offset, and limit", "", "", testStatus, false, expectedNotificationCount, http.StatusOK},
@@ -445,7 +445,7 @@ func TestNotificationsByStatus(t *testing.T) {
 }
 
 func TestNotificationsByTimeRange(t *testing.T) {
-	expectedNotificationCount := uint32(0)
+	expectedNotificationCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("NotificationCountByTimeRange", int64(0), int64(100), "").Return(expectedNotificationCount, nil)
@@ -466,7 +466,7 @@ func TestNotificationsByTimeRange(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, expectedNotificationCount, http.StatusOK},
@@ -584,13 +584,13 @@ func TestNotificationsBySubscriptionName(t *testing.T) {
 		Categories: testSubscriptionCategories,
 		Labels:     testSubscriptionLabels,
 	}
-	expectedNotificationCount := uint32(0)
+	expectedNotificationCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("SubscriptionByName", subscription.Name).Return(subscription, nil)
 	dbClientMock.On("NotificationCountByCategoriesAndLabels", subscription.Categories, subscription.Labels, "").Return(expectedNotificationCount, nil)
-	dbClientMock.On("NotificationsByCategoriesAndLabels", 0, 20, subscription.Categories, subscription.Labels, "").Return([]models.Notification{}, uint32(0), nil)
-	dbClientMock.On("NotificationsByCategoriesAndLabels", 0, 1, subscription.Categories, subscription.Labels, "").Return([]models.Notification{}, uint32(0), nil)
+	dbClientMock.On("NotificationsByCategoriesAndLabels", 0, 20, subscription.Categories, subscription.Labels, "").Return([]models.Notification{}, int64(0), nil)
+	dbClientMock.On("NotificationsByCategoriesAndLabels", 0, 1, subscription.Categories, subscription.Labels, "").Return([]models.Notification{}, int64(0), nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -605,7 +605,7 @@ func TestNotificationsBySubscriptionName(t *testing.T) {
 		limit              string
 		subscriptionName   string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get notifications without offset, and limit", "", "", subscription.Name, false, expectedNotificationCount, http.StatusOK},
@@ -831,7 +831,7 @@ func TestDeleteNotificationByAge(t *testing.T) {
 func TestNotificationsByQueryConditions(t *testing.T) {
 	start := int64(1556985370116)
 	end := int64(1756985370116)
-	expectedTotalCount := uint32(10)
+	expectedTotalCount := int64(10)
 	queryCondition := requests.NotificationQueryCondition{Category: []string{"test"}, Start: start, End: end}
 	queryConditionNoCategory := requests.NotificationQueryCondition{Category: []string{}, Start: start, End: end}
 	queryConditionWithoutCategoryField := requests.NotificationQueryCondition{Start: start, End: end}
@@ -868,7 +868,7 @@ func TestNotificationsByQueryConditions(t *testing.T) {
 		limit              string
 		condition          *requests.NotificationQueryCondition
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid", "0", "20", &queryCondition, false, expectedTotalCount, http.StatusOK},

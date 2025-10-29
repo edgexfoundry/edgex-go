@@ -17,7 +17,7 @@ import (
 )
 
 // AllCommands query commands by offset, and limit
-func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands []dtos.DeviceCoreCommand, totalCount uint32, err errors.EdgeX) {
+func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands []dtos.DeviceCoreCommand, totalCount int64, err errors.EdgeX) {
 	// retrieve device information through Metadata DeviceClient
 	dc := bootstrapContainer.DeviceClientFrom(dic.Get)
 	if dc == nil {

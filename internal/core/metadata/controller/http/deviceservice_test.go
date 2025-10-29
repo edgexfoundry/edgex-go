@@ -404,7 +404,7 @@ func TestAllDeviceServices(t *testing.T) {
 			Name: "ds3",
 		},
 	}
-	expectedTotalDeviceServiceCount := uint32(len(deviceServices))
+	expectedTotalDeviceServiceCount := int64(len(deviceServices))
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -429,7 +429,7 @@ func TestAllDeviceServices(t *testing.T) {
 		labels             string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get device services without labels", "0", "10", "", false, 3, expectedTotalDeviceServiceCount, http.StatusOK},

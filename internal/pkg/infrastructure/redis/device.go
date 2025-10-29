@@ -337,7 +337,7 @@ func deviceSubTree(conn redis.Conn, parent string, levels int, labels []string) 
 
 // Get the full result-set since that's the only way to correctly get totalCount.
 // Then return the subset of the result-set that corresponds to the requested offset and limit.
-func deviceTree(conn redis.Conn, parent string, levels int, offset int, limit int, labels []string) (uint32, []models.Device, errors.EdgeX) {
+func deviceTree(conn redis.Conn, parent string, levels int, offset int, limit int, labels []string) (int64, []models.Device, errors.EdgeX) {
 	var maxLevels int
 	var emptyList = []models.Device{}
 	if levels <= 0 {
@@ -353,11 +353,11 @@ func deviceTree(conn redis.Conn, parent string, levels int, offset int, limit in
 		offset = 0
 	}
 	if offset >= len(allDevices) {
-		return uint32(len(allDevices)), emptyList, nil
+		return int64(len(allDevices)), emptyList, nil
 	}
 	numToReturn := len(allDevices) - offset
 	if limit > 0 && limit < numToReturn {
 		numToReturn = limit
 	}
-	return uint32(len(allDevices)), allDevices[offset : offset+numToReturn], nil
+	return int64(len(allDevices)), allDevices[offset : offset+numToReturn], nil
 }

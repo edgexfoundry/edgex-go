@@ -136,10 +136,10 @@ func TestPurgeRecord(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		recordCount uint32
+		recordCount int64
 	}{
-		{"invoke schedule action record purging", configuration.Retention.MaxCap},
-		{"not invoke schedule action record purging", configuration.Retention.MinCap},
+		{"invoke schedule action record purging", int64(configuration.Retention.MaxCap)},
+		{"not invoke schedule action record purging", int64(configuration.Retention.MinCap)},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -155,7 +155,7 @@ func TestPurgeRecord(t *testing.T) {
 			})
 			err := purgeRecord(ctx, dic)
 			require.NoError(t, err)
-			if testCase.recordCount >= configuration.Retention.MaxCap {
+			if testCase.recordCount >= int64(configuration.Retention.MaxCap) {
 				dbClientMock.AssertCalled(t, "DeleteScheduleActionRecordByAge", ctx, mock.AnythingOfType("int64"))
 			} else {
 				dbClientMock.AssertNotCalled(t, "DeleteScheduleActionRecordByAge", ctx, mock.AnythingOfType("int64"))

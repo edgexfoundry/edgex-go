@@ -100,6 +100,7 @@ func (handler *Handler) SetupMosquittoPasswordFile(ctx context.Context, _ *sync.
 		return false
 	}
 
+	// #nosec G204 -- The user-provided arguments are passed as distinct strings, not interpreted by a shell.
 	cmd := exec.Command("mosquitto_passwd", "-c", "-b", pwdFile, handler.credentials.Username, handler.credentials.Password)
 	_, err := cmd.Output()
 
@@ -140,6 +141,7 @@ password_file {{.PwdFilePath}}`
 	lc.Infof("Creating the mosquitto config file: %s", brokerConfigFile)
 
 	// open config file with read-write and overwritten attribute (TRUNC)
+	// #nosec G304 -- This file path is constructed from a statically defined and trusted configuration value.
 	confFile, err := os.OpenFile(brokerConfigFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, readWriteOnlyForOwner)
 	if err != nil {
 		lc.Errorf("failed to open mosquitto config file %s: %v", brokerConfigFile, err)

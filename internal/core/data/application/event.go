@@ -146,7 +146,7 @@ func (a *CoreDataApp) DeleteEventById(id string, dic *di.Container) errors.EdgeX
 }
 
 // EventTotalCount return the count of all events currently stored in the database and error if any
-func (a *CoreDataApp) EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
+func (a *CoreDataApp) EventTotalCount(dic *di.Container) (int64, errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	count, err := dbClient.EventTotalCount()
@@ -158,7 +158,7 @@ func (a *CoreDataApp) EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) 
 }
 
 // EventCountByDeviceName return the count of all events associated with given device and error if any
-func (a *CoreDataApp) EventCountByDeviceName(deviceName string, dic *di.Container) (uint32, errors.EdgeX) {
+func (a *CoreDataApp) EventCountByDeviceName(deviceName string, dic *di.Container) (int64, errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	count, err := dbClient.EventCountByDeviceName(deviceName)
@@ -189,7 +189,7 @@ func (a *CoreDataApp) DeleteEventsByDeviceName(deviceName string, dic *di.Contai
 }
 
 // AllEvents query events by offset and limit
-func (a *CoreDataApp) AllEvents(parms query.Parameters, dic *di.Container) (events []dtos.Event, totalCount uint32, err errors.EdgeX) {
+func (a *CoreDataApp) AllEvents(parms query.Parameters, dic *di.Container) (events []dtos.Event, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	eventModels, err := dbClient.AllEvents(parms.Offset, parms.Limit)
@@ -218,7 +218,7 @@ func (a *CoreDataApp) AllEvents(parms query.Parameters, dic *di.Container) (even
 }
 
 // EventsByDeviceName query events with offset, limit and name
-func (a *CoreDataApp) EventsByDeviceName(parms query.Parameters, name string, dic *di.Container) (events []dtos.Event, totalCount uint32, err errors.EdgeX) {
+func (a *CoreDataApp) EventsByDeviceName(parms query.Parameters, name string, dic *di.Container) (events []dtos.Event, totalCount int64, err errors.EdgeX) {
 	if name == "" {
 		return events, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
@@ -249,7 +249,7 @@ func (a *CoreDataApp) EventsByDeviceName(parms query.Parameters, name string, di
 }
 
 // EventsByTimeRange query events with offset, limit and time range
-func (a *CoreDataApp) EventsByTimeRange(parms query.Parameters, dic *di.Container) (events []dtos.Event, totalCount uint32, err errors.EdgeX) {
+func (a *CoreDataApp) EventsByTimeRange(parms query.Parameters, dic *di.Container) (events []dtos.Event, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	eventModels, err := dbClient.EventsByTimeRange(parms.Start, parms.End, parms.Offset, parms.Limit)

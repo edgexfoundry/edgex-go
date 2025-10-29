@@ -160,7 +160,7 @@ func (c *Client) UpdateProvisionWatcher(pw model.ProvisionWatcher) errors.EdgeX 
 }
 
 // ProvisionWatcherCountByLabels returns the total count of Provision Watchers with labels specified.  If no label is specified, the total count of all provision watchers will be returned.
-func (c *Client) ProvisionWatcherCountByLabels(labels []string) (uint32, errors.EdgeX) {
+func (c *Client) ProvisionWatcherCountByLabels(labels []string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 
 	if len(labels) > 0 {
@@ -171,14 +171,14 @@ func (c *Client) ProvisionWatcherCountByLabels(labels []string) (uint32, errors.
 }
 
 // ProvisionWatcherCountByServiceName returns the count of Provision Watcher associated with specified service
-func (c *Client) ProvisionWatcherCountByServiceName(name string) (uint32, errors.EdgeX) {
+func (c *Client) ProvisionWatcherCountByServiceName(name string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 	queryObj := map[string]any{serviceNameField: name}
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(provisionWatcherTableName), queryObj)
 }
 
 // ProvisionWatcherCountByProfileName returns the count of Provision Watcher associated with specified profile
-func (c *Client) ProvisionWatcherCountByProfileName(name string) (uint32, errors.EdgeX) {
+func (c *Client) ProvisionWatcherCountByProfileName(name string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 	queryObj := map[string]any{"DiscoveredDevice": map[string]any{profileNameField: name}}
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(provisionWatcherTableName), queryObj)

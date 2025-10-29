@@ -135,7 +135,8 @@ func configureKuiperForSecureMessageBus(fields eKuiperFields, fileType string, f
 		return fmt.Errorf("failed to parse eKuiper %s template: %w", fileType, err)
 	}
 
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	// #nosec G304 -- This file path is constructed from a statically defined and trusted configuration value.
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to open/create eKuiper %s file %s: %w", fileType, path, err)
 	}

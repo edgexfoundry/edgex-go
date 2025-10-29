@@ -49,7 +49,7 @@ func CreateDirectoryIfNotExists(dirName string) (err error) {
 		return nil
 	} else if os.IsNotExist(err) {
 		// dirName not exists yet, create it
-		err = os.MkdirAll(dirName, os.ModePerm)
+		err = os.MkdirAll(dirName, os.ModePerm) //#nosec G301 -- Directory intentionally world-accessible for shared access
 	}
 
 	return
@@ -90,6 +90,7 @@ func CreateConfigFile(configDir, configFileName string, lc logger.LoggingClient)
 	lc.Infof("Creating the file: %s", configFilePath)
 
 	// open config file with read-write and overwritten attribute (TRUNC)
+	// #nosec G304 -- configFilePath is controlled and validated internally
 	configFile, err := os.OpenFile(configFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, readWriteOnlyForOwner)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config file %s: %v", configFilePath, err)

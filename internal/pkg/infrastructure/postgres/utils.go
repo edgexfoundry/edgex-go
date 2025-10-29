@@ -80,14 +80,14 @@ func getValidTimeRangeParameters(start, end int64, offset, limit int) (time.Time
 
 // getTotalRowsCount returns the total rows count from the given sql query
 // Note: the sql query must be a count query, e.g. SELECT COUNT(*) FROM table_name
-func getTotalRowsCount(ctx context.Context, connPool *pgxpool.Pool, sql string, args ...any) (uint32, errors.EdgeX) {
-	var rowCount int
+func getTotalRowsCount(ctx context.Context, connPool *pgxpool.Pool, sql string, args ...any) (int64, errors.EdgeX) {
+	var rowCount int64
 	err := connPool.QueryRow(ctx, sql, args...).Scan(&rowCount)
 	if err != nil {
 		return 0, pgClient.WrapDBError("failed to query total rows count", err)
 	}
 
-	return uint32(rowCount), nil
+	return rowCount, nil
 }
 
 // getUTCStartAndEndTime returns the UTC start and end time from the given start and end timestamp

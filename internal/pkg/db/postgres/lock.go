@@ -25,7 +25,10 @@ type AdvisoryLock interface {
 
 // NewAdvisoryLock creates a new instance with specified lock ID, and connection pool.
 func NewAdvisoryLock(connPool *pgxpool.Pool, logger logger.LoggingClient, serviceKey string) (AdvisoryLock, error) {
-	lockID := generateHashLockId(serviceKey)
+	lockID, err := generateHashLockId(serviceKey)
+	if err != nil {
+		return nil, err
+	}
 	logger.Debugf("Use Advisory lock ID: %d for service %s", lockID, serviceKey)
 	return &pgAdvisoryLock{
 		logger:   logger,
@@ -96,12 +99,16 @@ func lock(ctx context.Context, connPool *pgxpool.Pool, query string, lockId int6
 // generateHashLockId is a handy func to generates a hash value from the service key (string) and returns the int64 value.
 // note that the hash value is generated using FNV-1a algorithm, which is a non-cryptographic hash function intended for
 // applications that do not need the rigorous security requirement and can be faster and less resources-intensive.
-func generateHashLockId(serviceKey string) int64 {
+func generateHashLockId(serviceKey string) (int64, error) {
 	// generate a hash value from the string using Hash32a algorithm as the pg_try_advisory_lock function takes a
 	// bigint with value range from -2^63 to 2^63-1, which exactly matches the int64 value range. However, the 64-bit
 	// FNV-1a hash can only reproduce uint64 value that exceeds the bigint value range, so we use the 32-bit FNV-1a hash
 	// instead.
 	h := fnv.New32a()
-	h.Write([]byte(serviceKey))
-	return int64(h.Sum32())
+	_, err := h.Write([]byte(serviceKey))
+	if err != nil {
+		// in the unlikely event that writing to the hash fails, return the error
+		return 0, fmt.Errorf("error while generating hash lock ID from service key %s: %s", serviceKey, err.Error())
+	}
+	return int64(h.Sum32()), nil
 }

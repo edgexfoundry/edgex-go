@@ -29,7 +29,7 @@ import (
 var asyncPurgeRecordOnce sync.Once
 
 // AllScheduleActionRecords query the schedule action records with the specified offset, limit, and time range
-func AllScheduleActionRecords(ctx context.Context, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
+func AllScheduleActionRecords(ctx context.Context, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.ScheduleActionRecordTotalCount(ctx, start, end)
@@ -51,7 +51,7 @@ func AllScheduleActionRecords(ctx context.Context, start, end int64, offset, lim
 }
 
 // ScheduleActionRecordsByStatus query the schedule action records with the specified status, offset, limit, and time range
-func ScheduleActionRecordsByStatus(ctx context.Context, status string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
+func ScheduleActionRecordsByStatus(ctx context.Context, status string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount int64, err errors.EdgeX) {
 	if status == "" {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
 	}
@@ -76,7 +76,7 @@ func ScheduleActionRecordsByStatus(ctx context.Context, status string, start, en
 }
 
 // ScheduleActionRecordsByJobName query the schedule action records with the specified job name, offset, limit, and time range
-func ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
+func ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount int64, err errors.EdgeX) {
 	if jobName == "" {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "jobName is empty", nil)
 	}
@@ -101,7 +101,7 @@ func ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, 
 }
 
 // ScheduleActionRecordsByJobNameAndStatus query the schedule action records with the specified job name, status, offset, limit, and time range
-func ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
+func ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount int64, err errors.EdgeX) {
 	if jobName == "" {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "jobName is empty", nil)
 	}
@@ -129,7 +129,7 @@ func ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName, statu
 }
 
 // LatestScheduleActionRecordsByJobName query the latest schedule action records by job name
-func LatestScheduleActionRecordsByJobName(ctx context.Context, jobName string, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
+func LatestScheduleActionRecordsByJobName(ctx context.Context, jobName string, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	if _, err := dbClient.ScheduleJobByName(ctx, jobName); err != nil {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -141,7 +141,7 @@ func LatestScheduleActionRecordsByJobName(ctx context.Context, jobName string, d
 	}
 
 	scheduleActionRecordDTOs = dtos.FromScheduleActionRecordModelsToDTOs(records)
-	return scheduleActionRecordDTOs, uint32(len(records)), nil
+	return scheduleActionRecordDTOs, int64(len(records)), nil
 }
 
 // DeleteScheduleActionRecordsByAge deletes the schedule action records by age
@@ -308,7 +308,7 @@ func purgeRecord(ctx context.Context, dic *di.Container) errors.EdgeX {
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.Kind(err), "failed to query schedule action record total count, %v", err)
 	}
-	if total >= config.Retention.MaxCap {
+	if total >= int64(config.Retention.MaxCap) {
 		lc.Debugf("Purging the schedule action record amount %d to the minimum capacity %d", total, config.Retention.MinCap)
 		record, err := dbClient.LatestScheduleActionRecordsByOffset(ctx, config.Retention.MinCap)
 		if err != nil {

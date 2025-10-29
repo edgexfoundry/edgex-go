@@ -186,17 +186,17 @@ func objectIdExists(conn redis.Conn, id string) (bool, errors.EdgeX) {
 	return exists, nil
 }
 
-func getMemberCountByScoreRange(conn redis.Conn, key string, start int64, end int64) (uint32, errors.EdgeX) {
-	count, err := redis.Int(conn.Do(ZCOUNT, key, start, end))
+func getMemberCountByScoreRange(conn redis.Conn, key string, start int64, end int64) (int64, errors.EdgeX) {
+	count, err := redis.Int64(conn.Do(ZCOUNT, key, start, end))
 	if err != nil {
 		return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to get member count from %s between score range %v to %v", key, start, end), err)
 	}
 
-	return uint32(count), nil
+	return count, nil
 }
 
 // getMemberCountByLabels return the record count of key with labels specified.
-func getMemberCountByLabels(conn redis.Conn, command string, key string, labels []string) (uint32, errors.EdgeX) {
+func getMemberCountByLabels(conn redis.Conn, command string, key string, labels []string) (int64, errors.EdgeX) {
 	if len(labels) == 0 { //if no labels specified, simply return the count of record for the key
 		return getMemberNumber(conn, ZCARD, key)
 	}
@@ -211,16 +211,16 @@ func getMemberCountByLabels(conn redis.Conn, command string, key string, labels 
 	}
 	//find common Ids among two-dimension Ids slice associated with labels
 	commonIds := pkgCommon.FindCommonStrings(idsSlice...)
-	return uint32(len(commonIds)), nil
+	return int64(len(commonIds)), nil
 }
 
-func getMemberNumber(conn redis.Conn, command string, key string) (uint32, errors.EdgeX) {
-	count, err := redis.Int(conn.Do(command, key))
+func getMemberNumber(conn redis.Conn, command string, key string) (int64, errors.EdgeX) {
+	count, err := redis.Int64(conn.Do(command, key))
 	if err != nil {
 		return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to get member number with command %s from %s", command, key), err)
 	}
 
-	return uint32(count), nil
+	return count, nil
 }
 
 // unionObjectsByValues returns the keys of the set resulting from the union of all the given sets.

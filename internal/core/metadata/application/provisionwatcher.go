@@ -70,7 +70,7 @@ func ProvisionWatcherByName(name string, dic *di.Container) (provisionWatcher dt
 }
 
 // ProvisionWatchersByServiceName query provision watchers with offset, limit and service name
-func ProvisionWatchersByServiceName(offset int, limit int, name string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, totalCount uint32, err errors.EdgeX) {
+func ProvisionWatchersByServiceName(offset int, limit int, name string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, totalCount int64, err errors.EdgeX) {
 	if name == "" {
 		return provisionWatchers, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
@@ -97,7 +97,7 @@ func ProvisionWatchersByServiceName(offset int, limit int, name string, dic *di.
 }
 
 // ProvisionWatchersByProfileName query provision watchers with offset, limit and profile name
-func ProvisionWatchersByProfileName(offset int, limit int, name string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, totalCount uint32, err errors.EdgeX) {
+func ProvisionWatchersByProfileName(offset int, limit int, name string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, totalCount int64, err errors.EdgeX) {
 	if name == "" {
 		return provisionWatchers, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
@@ -124,7 +124,7 @@ func ProvisionWatchersByProfileName(offset int, limit int, name string, dic *di.
 }
 
 // AllProvisionWatchers query the provision watchers with offset, limit and labels
-func AllProvisionWatchers(offset int, limit int, labels []string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, totalCount uint32, err errors.EdgeX) {
+func AllProvisionWatchers(offset int, limit int, labels []string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.ProvisionWatcherCountByLabels(labels)

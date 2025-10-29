@@ -94,7 +94,7 @@ func (c *Client) ScheduleJobByName(ctx context.Context, name string) (models.Sch
 }
 
 // ScheduleJobTotalCount returns the total count of schedule jobs
-func (c *Client) ScheduleJobTotalCount(ctx context.Context, labels []string) (uint32, errors.EdgeX) {
+func (c *Client) ScheduleJobTotalCount(ctx context.Context, labels []string) (int64, errors.EdgeX) {
 	if len(labels) > 0 {
 		queryObj := map[string]any{labelsField: labels}
 		return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(scheduleJobTableName), queryObj)
