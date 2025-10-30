@@ -6,7 +6,9 @@
 package proxyauth
 
 import (
+	"bytes"
 	"context"
+	"crypto/aes"
 	"os"
 	"sync"
 
@@ -36,19 +38,28 @@ func loadDefaultAESKey() ([]byte, error) {
 	}
 
 	if keyData, err := readFile(defaultAESKeyFile); err == nil {
-		key := []byte(string(keyData))
-		for len(key) > 0 && (key[len(key)-1] == '\n' || key[len(key)-1] == '\r' || key[len(key)-1] == ' ') {
-			key = key[:len(key)-1]
-		}
-		return key, nil
+		return bytes.TrimSpace(keyData), nil
 	} else {
 		return nil, err
+	}
+}
+
+func checkAESKeySize(key []byte) error {
+	k := len(key)
+	switch k {
+	default:
+		return aes.KeySizeError(k)
+	case 16, 24, 32:
+		return nil
 	}
 }
 
 func createAESCryptor(dic *di.Container) (cryptoInterfaces.Crypto, error) {
 	defaultKey, err := loadDefaultAESKey()
 	if err != nil {
+		return nil, err
+	}
+	if err := checkAESKeySize(defaultKey); err != nil {
 		return nil, err
 	}
 	if secret.IsSecurityEnabled() {
