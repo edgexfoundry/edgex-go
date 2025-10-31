@@ -17,14 +17,14 @@
 # 
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.23-alpine3.20
+ARG BUILDER_BASE=golang:1.25-alpine3.22
 FROM ${BUILDER_BASE} AS builder
 
 ARG ADD_BUILD_TAGS=""
 
 WORKDIR /edgex-go
 
-RUN apk add --update --no-cache make bash git ca-certificates zeromq-dev
+RUN apk add --update --no-cache make bash git ca-certificates build-base pkgconfig zeromq-dev
 
 COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
@@ -32,7 +32,7 @@ RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 COPY . .
 RUN make cmd/support-notifications/support-notifications
 
-FROM alpine:3.20
+FROM alpine:3.22
 
 RUN apk add --update --no-cache ca-certificates dumb-init zeromq
 # Ensure using latest versions of all installed packages to avoid any recent CVEs

@@ -1,12 +1,22 @@
-run:
-  timeout: 5m
+version: "2"
 linters:
-  disable:
   enable:
     - gosec
-linters-settings:
-  gosec:
-    excludes:
-      # G115: integer overflow conversion
-      # exclude the rule since it tends to be false positive
-      - G115
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
