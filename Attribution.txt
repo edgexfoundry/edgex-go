@@ -388,3 +388,60 @@ https://github.com/pebbe/zmq4/blob/master/LICENSE.txt
 
 github.com/blang/semver/v4 (MIT) https://github.com/blang/semver
 https://github.com/blang/semver/blob/master/LICENSE
+
+github.com/emirpasic/gods (BSD) https://github.com/emirpasic/gods
+https://github.com/emirpasic/gods/blob/master/LICENSE
+
+github.com/go-openapi/swag/cmdutils (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/swag/conv (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/swag/fileutils (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/swag/jsonname (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/swag/jsonutils (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/swag/loading (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/swag/mangling (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/swag/netutils (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/swag/stringutils (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/swag/typeutils (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/swag/yamlutils (Apache 2.0) https://github.com/go-openapi/swag/
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-viper/mapstructure/v2 (MIT) https://github.com/go-viper/mapstructure/
+https://github.com/go-viper/mapstructure/blob/main/LICENSE
+
+github.com/openziti/channel/v4 (Apache 2.0) https://github.com/openziti/channel
+https://github.com/openziti/channel/blob/main/LICENSE
+
+github.com/zitadel/logging (Apache 2.0) https://github.com/zitadel/logging
+https://github.com/zitadel/logging/blob/main/LICENSE
+
+github.com/zitadel/oidc/v3 (Apache 2.0) https://github.com/zitadel/oidc
+https://github.com/zitadel/oidc/blob/main/LICENSE
+
+github.com/zitadel/schema (BSD-3) https://github.com/zitadel/schema
+https://github.com/zitadel/schema/blob/main/LICENSE
+
+go.opentelemetry.io/auto/sdk (Apache 2.0) https://github.com/open-telemetry/opentelemetry-go-instrumentation
+https://github.com/open-telemetry/opentelemetry-go-instrumentation/blob/main/LICENSE
+
+go.yaml.in/yaml/v3 (Apache 2.0) https://github.com/yaml/go-yaml/tree/v3/
+https://github.com/yaml/go-yaml/blob/v3/LICENSE
