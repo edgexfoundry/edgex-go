@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.43
+	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.44
 	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.21
 	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.18
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.7
@@ -98,14 +98,14 @@ require (
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
-	github.com/openziti/channel/v4 v4.2.37 // indirect
-	github.com/openziti/edge-api v0.26.50 // indirect
-	github.com/openziti/foundation/v2 v2.0.77 // indirect
-	github.com/openziti/identity v1.0.116 // indirect
+	github.com/openziti/channel/v4 v4.2.41 // indirect
+	github.com/openziti/edge-api v0.26.51 // indirect
+	github.com/openziti/foundation/v2 v2.0.79 // indirect
+	github.com/openziti/identity v1.0.118 // indirect
 	github.com/openziti/metrics v1.4.2 // indirect
-	github.com/openziti/sdk-golang v1.2.10 // indirect
-	github.com/openziti/secretstream v0.1.39 // indirect
-	github.com/openziti/transport/v2 v2.0.194 // indirect
+	github.com/openziti/sdk-golang v1.3.0 // indirect
+	github.com/openziti/secretstream v0.1.42 // indirect
+	github.com/openziti/transport/v2 v2.0.198 // indirect
 	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect
 	github.com/parallaxsecond/parsec-client-go v0.0.0-20221025095442-f0a77d263cf9 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
