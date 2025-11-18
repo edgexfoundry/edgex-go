@@ -201,8 +201,12 @@ func (mc *Client) Unsubscribe(topics ...string) error {
 	defer mc.subscriptionMutex.Unlock()
 
 	token := mc.mqttClient.Unsubscribe(topics...)
-	if token.Error() != nil {
-		return token.Error()
+
+	optionsReader := mc.mqttClient.OptionsReader()
+
+	err := getTokenError(token, optionsReader.WriteTimeout(), UnsubscribeOperation, "Failed to unsubscribe")
+	if err != nil {
+		return err
 	}
 
 	for _, topic := range topics {
