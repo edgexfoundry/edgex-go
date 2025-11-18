@@ -63,6 +63,19 @@ components:
         sourceName:
           type: string
           description: SourceName indicates the name of the resource or device command in the device profile which describes the event to generate
+        retention:
+          type: object
+          description: Retention defines policies for retaining autoevents.
+          properties:
+            maxCap:
+              type: integer
+              description: The maximum number of events to retain.
+            minCap:
+              type: integer
+              description: The minimum number of events to retain before deletion.
+            duration:
+              type: string
+              description: Duration string representing how long to retain the events, valid time units are "s", "m", "h", e.g., "1.5h" or "2h45m"
       required:
         - interval
         - resource
@@ -592,6 +605,9 @@ components:
         adminState:
           type: string
           description: Device Service Admin State
+        properties:
+          type: object
+          description: A map of properties required to address the given device service
     DeviceServiceResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -653,8 +669,8 @@ components:
             - UNLOCKED
         discoveredDevice:
           type: object
-          items:
-            $ref: '#/components/schemas/DiscoveredDevice'
+          allOf:
+            - $ref: '#/components/schemas/DiscoveredDevice'
     CreateProvisionWatcher:
       description: "A ProvisionWatcher defines the filtering criteria for device auto discovery."
       type: object
@@ -739,14 +755,14 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
-        provisionwatcher:
+        provisionWatcher:
           $ref: '#/components/schemas/ProvisionWatcher'
     MultiProvisionWatchersResponse:
       allOf:
         - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       type: object
       properties:
-        provisionwatchers:
+        provisionWatchers:
           type: array
           items:
             $ref: '#/components/schemas/ProvisionWatcher'
@@ -978,8 +994,7 @@ components:
     ProtocolProperties:
       description: A map of properties for the given protocol
       type: object
-      additionalProperties:
-        type: object
+      additionalProperties: true
     ResourceOperation:
       description: "Defines an operation of which a device is capable."
       type: object
@@ -1178,16 +1193,16 @@ components:
       required: false
       schema:
         type: boolean
+        default: false
       description: "Indicates whether to skip the Device Service Validation API call."
-      default: false
     forceParam:
       in: query
       name: force
       required: false
       schema:
         type: boolean
+        default: false
       description: "Indicates whether to force add the device if device name already exists."
-      default: false
   headers:
     correlatedResponseHeader:
       description: "A response header that returns the unique correlation ID used to initiate the request."
@@ -1348,8 +1363,8 @@ components:
             protocols:
               modbus-tcp:
                 Address: "localhost"
-                Port: "502"
-                UnitID: "1"
+                Port: 502
+                UnitID: 1
             tags:
               tag1:
                 field1: "field1Value"
@@ -1630,7 +1645,7 @@ components:
         requestId: "4e63c9b9-9cc4-45e4-9bf0-6d994a3860b4"
         statusCode: 200
         totalCount: 3
-        provisionwatchers:
+        provisionWatchers:
           - id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
             name: "virtual-watcher"
             created: 1600927134890
@@ -3957,7 +3972,7 @@ paths:
                 apiVersion: "v3"
                 requestId: "4e63c9b9-9cc4-45e4-9bf0-6d994a3860b4"
                 statusCode: 200
-                provisionwatcher:
+                provisionWatcher:
                   id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
                   name: "virtual-watcher"
                   created: 1600927134890

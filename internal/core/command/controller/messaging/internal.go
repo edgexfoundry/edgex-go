@@ -57,7 +57,9 @@ func SubscribeCommandRequests(ctx context.Context, requestTimeout time.Duration,
 			case err = <-messageErrors:
 				lc.Error(err.Error())
 			case requestEnvelope := <-messages:
-				processDeviceCommandRequest(messageBus, requestEnvelope, baseTopic, requestTimeout, lc, dic)
+				go func() {
+					processDeviceCommandRequest(messageBus, requestEnvelope, baseTopic, requestTimeout, lc, dic)
+				}()
 			}
 		}
 	}()
@@ -211,7 +213,9 @@ func SubscribeCommandQueryRequests(ctx context.Context, dic *di.Container) error
 			case err = <-messageErrors:
 				lc.Error(err.Error())
 			case requestEnvelope := <-messages:
-				processCommandQueryRequest(messageBus, requestEnvelope, baseTopic, lc, dic)
+				go func() {
+					processCommandQueryRequest(messageBus, requestEnvelope, baseTopic, lc, dic)
+				}()
 			}
 		}
 	}()

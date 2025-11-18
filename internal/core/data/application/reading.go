@@ -8,11 +8,13 @@ package application
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
@@ -311,7 +313,7 @@ func AsyncPurgeEvent(ctx context.Context, dic *di.Container) errors.EdgeX {
 					lc.Info("Exiting event retention")
 					return
 				case <-timer.C:
-					err = purgeEventByAutoEvents(dic)
+					err = purgeEvents(dic)
 					if err != nil {
 						lc.Errorf("Failed to purge events and readings, %v", err)
 						break
@@ -324,20 +326,24 @@ func AsyncPurgeEvent(ctx context.Context, dic *di.Container) errors.EdgeX {
 	return nil
 }
 
-func purgeEventByAutoEvents(dic *di.Container) errors.EdgeX {
+func purgeEvents(dic *di.Container) errors.EdgeX {
 	devices := container.DeviceStoreFrom(dic.Get).Devices()
 	for _, device := range devices {
 		for _, e := range device.AutoEvents {
-			err := purgeEvent(device.Name, e, dic)
-			if err != nil {
+			if err := purgeEventsByAutoEvent(device.Name, e, dic); err != nil {
 				return errors.NewCommonEdgeXWrapper(err)
 			}
+		}
+
+		// purge events that are not in auto events
+		if err := purgeNoneAutoEventsByDevice(device, dic); err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("purge device '%s' events not coming from auto events", device.Name), err)
 		}
 	}
 	return nil
 }
 
-func purgeEvent(deviceName string, autoEvent models.AutoEvent, dic *di.Container) errors.EdgeX {
+func purgeEventsByAutoEvent(deviceName string, autoEvent models.AutoEvent, dic *di.Container) errors.EdgeX {
 	config := container.ConfigurationFrom(dic.Get)
 	// apply the default retention policy, when maxCap/minCap/duration are not specified or equal to zero/empty string
 	// which are mentioned in the documentation
@@ -464,4 +470,59 @@ func countBasedEventRetention(deviceName string, autoEvent models.AutoEvent, dic
 		}
 	}
 	return nil
+}
+
+func purgeNoneAutoEventsByDevice(device models.Device, dic *di.Container) errors.EdgeX {
+	if len(device.ProfileName) == 0 {
+		return nil
+	}
+	sources, err := noneAutoEventSourcesByDevice(device, dic)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	for _, source := range sources {
+		autoEvent := models.AutoEvent{SourceName: source} // Empty AutoEvent.Retention will apply default retention policy
+		err = purgeEventsByAutoEvent(device.Name, autoEvent, dic)
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+	}
+	return nil
+}
+
+// noneAutoEventSourcesByDevice returns sources that are not defined in the device's auto events
+func noneAutoEventSourcesByDevice(device models.Device, dic *di.Container) ([]string, errors.EdgeX) {
+	profileClient := bootstrapContainer.DeviceProfileClientFrom(dic.Get)
+	profile, err := profileClient.DeviceProfileByName(context.Background(), device.ProfileName)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("retrieve event sources not in auto events from the device '%s'", device.Name), err)
+	}
+	var sources []string
+	for _, r := range profile.Profile.DeviceResources {
+		// skip the device resource that is associated with any AutoEvent definitions.
+		if contained := slices.ContainsFunc(device.AutoEvents, func(event models.AutoEvent) bool {
+			return event.SourceName == r.Name
+		}); contained {
+			continue
+		}
+		// skip write-only device resource that do not generate events
+		if r.Properties.ReadWrite == common.ReadWrite_W {
+			continue
+		}
+		sources = append(sources, r.Name)
+	}
+	for _, c := range profile.Profile.DeviceCommands {
+		// skip the device command that is associated with any AutoEvent definitions.
+		if contained := slices.ContainsFunc(device.AutoEvents, func(event models.AutoEvent) bool {
+			return event.SourceName == c.Name
+		}); contained {
+			continue
+		}
+		// skip write-only device command that do not generate events
+		if c.ReadWrite == common.ReadWrite_W {
+			continue
+		}
+		sources = append(sources, c.Name)
+	}
+	return sources, nil
 }

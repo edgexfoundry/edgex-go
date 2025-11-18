@@ -123,7 +123,7 @@ func (c *Client) EventById(id string) (model.Event, errors.EdgeX) {
 
 // EventTotalCount returns the total count of Event from db
 func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCount(eventTableName))
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountEvent())
 }
 
 // EventCountByDeviceName returns the count of Event associated a specific Device from db
@@ -202,7 +202,15 @@ func (c *Client) DeleteEventById(id string) errors.EdgeX {
 // DeleteEventsByDeviceName deletes specific device's events and corresponding readings
 // This function is implemented to starts up two goroutines to delete readings and events in the background to achieve better performance
 func (c *Client) DeleteEventsByDeviceName(deviceName string) errors.EdgeX {
-	return c.deleteEventsByConditions([]string{deviceNameCol}, []any{deviceName})
+	// update deviceInfo as deletable, then event and reading will not return when the user query event or reading by the specific device
+	if err := c.updateDeviceInfosDeletableByDeviceName(deviceName); err != nil {
+		return errors.NewCommonEdgeX(errors.Kind(err), "delete events by deviceName", err)
+	}
+	// delete events, readings, deviceInfos
+	if err := c.deleteEventsByConditions([]string{deviceNameCol}, []any{deviceName}); err != nil {
+		return errors.NewCommonEdgeX(errors.Kind(err), "delete events by deviceName", err)
+	}
+	return nil
 }
 
 // DeleteEventsByDeviceNameAndSourceName deletes specific device's events and corresponding readings

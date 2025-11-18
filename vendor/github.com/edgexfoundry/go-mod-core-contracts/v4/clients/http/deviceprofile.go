@@ -48,6 +48,7 @@ func NewDeviceProfileClientWithUrlCallback(baseUrlFunc clients.ClientBaseUrlFunc
 	return &DeviceProfileClient{
 		baseUrlFunc:           baseUrlFunc,
 		authInjector:          authInjector,
+		resourcesCache:        make(map[string]responses.DeviceResourceResponse),
 		enableNameFieldEscape: enableNameFieldEscape,
 	}
 }

@@ -27,7 +27,7 @@ var (
 )
 
 func (c *Client) ReadingTotalCount() (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCount(readingTableName))
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReading())
 }
 
 func (c *Client) AllReadings(offset int, limit int) ([]model.Reading, errors.EdgeX) {

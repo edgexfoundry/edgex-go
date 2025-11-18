@@ -5,10 +5,10 @@ go 1.23
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
-	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.0.3
-	github.com/edgexfoundry/go-mod-configuration/v4 v4.0.1
-	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.0.1
-	github.com/edgexfoundry/go-mod-messaging/v4 v4.0.1
+	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.0.4
+	github.com/edgexfoundry/go-mod-configuration/v4 v4.0.2
+	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.0.2
+	github.com/edgexfoundry/go-mod-messaging/v4 v4.0.2
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.0.1
 	github.com/fxamacker/cbor/v2 v2.7.0
 	github.com/go-co-op/gocron/v2 v2.16.0

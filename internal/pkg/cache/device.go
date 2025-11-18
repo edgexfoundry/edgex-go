@@ -3,7 +3,6 @@
 package cache
 
 import (
-	"maps"
 	"sync"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
@@ -75,7 +74,11 @@ func (s *activeDeviceStore) Devices() map[string]models.Device {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	// since the device map might change, return the copy of devices to prevent unexpected result
-	return maps.Clone(s.activeDeviceMap)
+	clonedDevices := make(map[string]models.Device, len(s.activeDeviceMap))
+	for deviceName, device := range s.activeDeviceMap {
+		clonedDevices[deviceName] = device.Clone()
+	}
+	return clonedDevices
 }
 
 func DeviceStore(dic *di.Container) ActiveDeviceStore {

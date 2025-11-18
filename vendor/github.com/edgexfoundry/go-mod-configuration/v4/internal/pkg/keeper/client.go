@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"reflect"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
@@ -209,8 +210,8 @@ func (k *keeperClient) WatchForChanges(updateChannel chan<- interface{}, errorCh
 			case e := <-watchErrors:
 				errorChannel <- e
 			case msgEnvelope := <-messages:
-				if msgEnvelope.ContentType != common.ContentTypeJSON {
-					errorChannel <- fmt.Errorf("invalid content type of configuration changes message, expected: %s, but got: %s", common.ContentTypeJSON, msgEnvelope.ContentType)
+				if msgEnvelope.ContentType != common.ContentTypeJSON && msgEnvelope.ContentType != common.ContentTypeCBOR {
+					errorChannel <- fmt.Errorf("invalid content type of configuration changes message, expected: %s or %s, but got: %s", common.ContentTypeJSON, common.ContentTypeCBOR, msgEnvelope.ContentType)
 					continue
 				}
 				var updatedConfig models.KVS
@@ -232,25 +233,32 @@ func (k *keeperClient) WatchForChanges(updateChannel chan<- interface{}, errorCh
 				// if the updated key not equal to keyPrefix, need to check the updated key and value from the message payload are valid
 				// e.g. keyPrefix = "edgex/3.0/core-data/Writable" which is the root level of Writable configuration
 				if updatedConfig.Key != keyPrefix {
-					foundUpdatedKey := false
 					for _, c := range kvConfigs.Response {
 						if c.Key == updatedConfig.Key {
-							// the updated key from the message payload has been found in Keeper
-							foundUpdatedKey = true
 							// if the updated value in the message payload is different from the one obtained by Keeper
-							// skip this subscribed message payload and continue the outer loop
-							if c.Value != updatedConfig.Value {
+							//   skip this subscribed message payload and continue the outer loop
+							// if the updated value in the message payload is equal to the one obtained by Keeper
+							//   decode the kvConfigs with the configuration struct
+
+							// convert the message payload value to string for value comparison, because the value retrieved from the Keeper is always a string, but the value from the message payload may be either a string, bool, or float.
+							updatedValueStr := fmt.Sprintf("%v", updatedConfig.Value)
+							if c.Value != updatedValueStr {
 								continue outerLoop
 							}
 							break
 						}
 					}
-					// if the updated key from the message payload hasn't been found in Keeper
-					// skip this subscribed message payload
-					if !foundUpdatedKey {
-						errorChannel <- fmt.Errorf("the updated key %s hasn't been found in Keeper, skipping this message", updatedConfig.Key)
-						continue
-					}
+				}
+
+				// note that the configuration will bare runtime values after first call to the
+				// WatchForChanges, so it's possible that a custom config that has been removed will
+				// still remain in the configuration after loading kvConfigs.Response into configuration.
+				// To avoid such cases, always reset configuration (a pointer to a struct) to its zero value
+				// before loading kvConfigs.Response into configuration.
+				v := reflect.ValueOf(configuration)
+				if v.Kind() == reflect.Ptr && !v.IsNil() {
+					v = v.Elem()
+					v.Set(reflect.Zero(v.Type()))
 				}
 
 				// decode KV DTO array to configuration struct
