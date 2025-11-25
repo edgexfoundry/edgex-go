@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Edgex Foundry - Support Scheduler API
   description: This is the definition of the API for the Support Scheduler service in the EdgeX Foundry IOT microservice platform. Support Scheduler provides functionality for scheduling different actions in the EdgeX Foundry platform.
-  version: 4.0.0
+  version: 4.0.2
 
 servers:
   - url: http://localhost:59863/api/v3
@@ -1343,7 +1343,7 @@ paths:
                 $ref: '#/components/schemas/VersionResponse'
               example:
                 apiVersion: "v3"
-                version: 4.0.0
+                version: 4.0.2
                 serviceName: "support-scheduler"
         '500':
           description: "Internal Server Error"

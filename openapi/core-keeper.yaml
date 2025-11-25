@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Edgex Foundry - Core Keeper API
   description: This is the definition of the API for the Core Keeper service in the EdgeX Foundry IOT microservice platform.
-  version: 4.0.0
+  version: 4.0.2
 
 servers:
   - url: http://localhost:59890/api/v3
@@ -880,7 +880,7 @@ paths:
                 $ref: '#/components/schemas/VersionResponse'
               example:
                 apiVersion: "v3"
-                version: "4.0.0"
+                version: 4.0.2
         '500':
           description: "Interval Server Error"
           content:
