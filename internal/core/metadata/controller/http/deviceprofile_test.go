@@ -1605,3 +1605,108 @@ func TestAllDeviceProfileBasicInfos(t *testing.T) {
 		})
 	}
 }
+
+func TestPatchDeviceProfileTags(t *testing.T) {
+	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	notFoundName := "notFoundName"
+	expectedRequestId := ExampleUUID
+	updateTags := map[string]any{"TestTagKey": "NewTestTagValue", "TestTagKey2": "TestTagValue2"}
+	testReq := requests.DeviceProfileTagsRequest{
+		BaseRequest: commonDTO.BaseRequest{
+			Versionable: commonDTO.NewVersionable(),
+			RequestId:   ExampleUUID,
+		},
+		UpdateDeviceProfileTags: dtos.UpdateDeviceProfileTags{
+			DeviceResources: []dtos.UpdateTags{{Name: TestDeviceResourceName, Tags: updateTags}},
+			DeviceCommands:  []dtos.UpdateTags{{Name: TestDeviceCommandName, Tags: updateTags}},
+		},
+	}
+
+	valid := testReq
+	noRequestId := valid
+	noRequestId.RequestId = ""
+
+	noDRName := testReq
+	noDRName.DeviceResources = []dtos.UpdateTags{{Tags: updateTags}}
+	emptyDRName := testReq
+	emptyDRName.DeviceResources = []dtos.UpdateTags{{Name: " ", Tags: updateTags}}
+	noDRTags := testReq
+	noDRTags.DeviceResources = []dtos.UpdateTags{{Name: TestDeviceResourceName}}
+	emptyDRTags := testReq
+	emptyDRTags.DeviceResources = []dtos.UpdateTags{{Name: TestDeviceCommandName, Tags: map[string]any{}}}
+
+	noDCName := testReq
+	noDCName.DeviceCommands = []dtos.UpdateTags{{Tags: updateTags}}
+	emptyDCName := testReq
+	emptyDCName.DeviceCommands = []dtos.UpdateTags{{Name: " ", Tags: updateTags}}
+	noDCTags := testReq
+	noDCTags.DeviceCommands = []dtos.UpdateTags{{Name: TestDeviceCommandName}}
+
+	emptyDCTags := testReq
+	emptyDCTags.DeviceCommands = []dtos.UpdateTags{{Name: TestDeviceCommandName, Tags: map[string]any{}}}
+
+	dic := mockDic()
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeviceProfileByName", deviceProfile.Name).Return(deviceProfile, nil)
+	dbClientMock.On("DeviceProfileByName", notFoundName).Return(deviceProfile, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "not found", nil))
+	dbClientMock.On("DevicesByProfileName", 0, -1, deviceProfile.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
+	dbClientMock.On("DeviceCountByProfileName", deviceProfile.Name).Return(int64(1), nil)
+	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceProfileController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		deviceProfileName  string
+		request            requests.DeviceProfileTagsRequest
+		expectedStatusCode int
+	}{
+		{"valid", deviceProfile.Name, valid, http.StatusOK},
+		{"valid - no request id", deviceProfile.Name, noRequestId, http.StatusOK},
+		{"invalid - device profile not found", notFoundName, valid, http.StatusNotFound},
+		{"invalid - no device resource name", deviceProfile.Name, noDRName, http.StatusBadRequest},
+		{"invalid - empty device resource name", deviceProfile.Name, emptyDRName, http.StatusBadRequest},
+		{"invalid - no device resource tags", deviceProfile.Name, noDRTags, http.StatusBadRequest},
+		{"invalid - empty device resource tags", deviceProfile.Name, emptyDRTags, http.StatusBadRequest},
+		{"invalid - no device command name", deviceProfile.Name, noDCName, http.StatusBadRequest},
+		{"invalid - empty device command name", deviceProfile.Name, emptyDCName, http.StatusBadRequest},
+		{"invalid - no device command tags", deviceProfile.Name, noDRTags, http.StatusBadRequest},
+		{"invalid - empty device command tags", deviceProfile.Name, emptyDCTags, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
+			jsonData, err := json.Marshal(testCase.request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+			req, err := http.NewRequest(http.MethodPatch, common.ApiDeviceProfileTagsByNameRoute, reader)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceProfileName)
+			err = controller.PatchDeviceProfileTags(c)
+			require.NoError(t, err)
+
+			var res commonDTO.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+			assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			if res.RequestId != "" {
+				assert.Equal(t, expectedRequestId, res.RequestId, "RequestID not as expected")
+			}
+		})
+	}
+}

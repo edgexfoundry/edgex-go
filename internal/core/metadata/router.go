@@ -43,6 +43,7 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	r.GET(common.ApiDeviceProfileByManufacturerAndModelRoute, dc.DeviceProfilesByManufacturerAndModel, authenticationHook)
 	r.PATCH(common.ApiDeviceProfileBasicInfoRoute, dc.PatchDeviceProfileBasicInfo, authenticationHook)
 	r.GET(common.ApiAllDeviceProfileBasicInfoRoute, dc.AllDeviceProfileBasicInfos, authenticationHook)
+	r.PATCH(common.ApiDeviceProfileTagsByNameRoute, dc.PatchDeviceProfileTags, authenticationHook)
 
 	// Device Resource
 	dr := metadataController.NewDeviceResourceController(dic)

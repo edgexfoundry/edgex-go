@@ -304,7 +304,6 @@ components:
         properties:
           type: object
           description: A map of properties required to address the given device
-
     DeviceProfileBasicInfo:
       description: "A profile basic information"
       type: object
@@ -336,6 +335,32 @@ components:
           $ref: '#/components/schemas/DeviceProfileBasicInfo'
       required:
         - profileName
+    UpdateTags:
+      type: object
+      properties:
+        name:
+          type: string
+          description: device resource or device command name
+        tags:
+          type: object
+          description: A map of tags to add or update
+      required:
+        - name
+        - tags
+    DeviceProfileTagsRequest:
+      description: "Add/Update tags of device resources/device commands in an existing profile"
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      properties:
+        deviceResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateTags'
+        deviceCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateTags'
     MultiDeviceProfileBasicInfosResponse:
       allOf:
         - $ref: '#/components/schemas/BaseWithTotalCountResponse'
@@ -446,7 +471,7 @@ components:
           type: boolean
           description: "Indicate the visibility of the DeviceResource via a CoreCommand."
         tags:
-          type: string
+          type: object
           description: "Tags for adding additional information on reading level"
         properties:
           $ref: '#/components/schemas/ResourceProperties'
@@ -853,7 +878,7 @@ components:
         name:
           type: string
         tags:
-          type: string
+          type: object
           description: "Tags for adding additional information on event level"
         isHidden:
           type: boolean
@@ -2661,6 +2686,73 @@ paths:
                   $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  '/deviceprofile/name/{name}/tags':
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The unique name of a device profile"
+    patch:
+      summary: "Allows adding or updating the tags field for device resources or device commands within an existing device profile. Removing existing tags is not supported."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: '#/components/schemas/DeviceProfileTagsRequest'
+            example:
+              apiVersion: "v3"
+              requestId: "2463bff9-aa53-4bc4-bebf-42fe81146ea8"
+              deviceResources:
+                - name: "Float32"
+                  tags:
+                    tag1: "field1Value"
+              deviceCommands:
+                - name: "Float32"
+                  tags:
+                    tag2:
+                      field3: "field3Value"
+      responses:
+        '200':
+          description: "Update successful"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
