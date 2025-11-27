@@ -313,6 +313,33 @@ func AllDeviceProfileBasicInfos(offset int, limit int, labels []string, dic *di.
 	return deviceProfileBasicInfos, totalCount, nil
 }
 
+func PatchDeviceProfileTags(profileName string, dto dtos.UpdateDeviceProfileTags, ctx context.Context, dic *di.Container) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	deviceProfile, err := dbClient.DeviceProfileByName(profileName)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	requests.ReplaceDeviceProfileModelTagsWithDTO(&deviceProfile, dto)
+
+	err = dbClient.UpdateDeviceProfile(deviceProfile)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	lc.Debugf(
+		"DeviceProfile device resources/commands tags patched on DB successfully. Correlation-ID: %s ",
+		correlation.FromContext(ctx),
+	)
+
+	profileDTO := dtos.FromDeviceProfileModelToDTO(deviceProfile)
+	go publishUpdateDeviceProfileSystemEvent(profileDTO, ctx, dic)
+
+	return nil
+}
+
 func deviceProfileByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDeviceProfileBasicInfo) (deviceProfile models.DeviceProfile, err errors.EdgeX) {
 	// The ID or Name is required by DTO and the DTO also accepts empty string ID if the Name is provided
 	if dto.Id != nil && *dto.Id != "" {

@@ -404,3 +404,34 @@ func (dc *DeviceProfileController) AllDeviceProfileBasicInfos(c echo.Context) er
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
+
+func (dc *DeviceProfileController) PatchDeviceProfileTags(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
+	if r.Body != nil {
+		defer func() { _ = r.Body.Close() }()
+	}
+
+	lc := container.LoggingClientFrom(dc.dic.Get)
+
+	ctx := r.Context()
+
+	// URL parameters
+	name := c.Param(common.Name)
+
+	var reqDTO requestDTO.DeviceProfileTagsRequest
+	err := dc.jsonDtoReader.Read(r.Body, &reqDTO)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+
+	reqId := reqDTO.RequestId
+	err = application.PatchDeviceProfileTags(name, reqDTO.UpdateDeviceProfileTags, ctx, dc.dic)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, reqId)
+	}
+
+	response := commonDTO.NewBaseResponse(reqId, "", http.StatusOK)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
+}

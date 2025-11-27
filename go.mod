@@ -6,7 +6,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.45
-	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.21
+	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.22
 	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.18
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.7
 	github.com/fxamacker/cbor/v2 v2.9.0
