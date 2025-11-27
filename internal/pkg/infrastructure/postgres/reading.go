@@ -364,7 +364,7 @@ func deleteReadingsBySubQuery(ctx context.Context, tx pgx.Tx, subQuerySql string
 		args,
 	)
 	if commandTag.RowsAffected() == 0 {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "no reading found", nil)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("no reading found; SQL statement: %s", sqlStatement), nil)
 	}
 	if err != nil {
 		return pgClient.WrapDBError("reading(s) delete failed", err)
