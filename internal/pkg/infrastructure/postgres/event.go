@@ -236,14 +236,22 @@ func (c *Client) deleteEventsByConditions(cols []string, values pgx.NamedArgs) e
 			// select the event-ids of the specified device name from event table as the sub-query of deleting readings
 			subSqlStatement := sqlQueryEventIdFieldsByCol(cols...)
 			if err = deleteReadingsBySubQuery(ctx, tx, subSqlStatement, values); err != nil {
-				c.loggingClient.Errorf("failed delete readings with conditions '%v' '%v': %v", cols, values, err)
-				return err
+				if errors.Kind(err) == errors.KindEntityDoesNotExist {
+					c.loggingClient.Debugf("no readings found for deletion: %s", err.Error())
+				} else {
+					c.loggingClient.Errorf("failed delete readings with conditions '%v' '%v': %v", cols, values, err)
+					return err
+				}
 			}
 
 			err = deleteEvents(ctx, tx, sqlStatement, values)
 			if err != nil {
-				c.loggingClient.Errorf("failed delete event with conditions '%v' '%v': %v", cols, values, err)
-				return err
+				if errors.Kind(err) == errors.KindEntityDoesNotExist {
+					c.loggingClient.Debugf("no events found for deletion: %s", err.Error())
+				} else {
+					c.loggingClient.Errorf("failed delete event with conditions '%v' '%v': %v", cols, values, err)
+					return err
+				}
 			}
 
 			for _, deviceInfo := range deviceInfos {
@@ -297,14 +305,22 @@ func (c *Client) deleteEventsByAgeAndConditions(age int64, cols []string, values
 			// select the event ids within the origin time range from event table as the sub-query of deleting readings
 			subSqlStatement := sqlQueryEventIdFieldByTimeRangeAndConditions(originCol, cols...)
 			if err := deleteReadingsBySubQuery(ctx, tx, subSqlStatement, values); err != nil {
-				c.loggingClient.Errorf("failed delete readings by age '%d' nanoseconds: %v", age, err)
-				return err
+				if errors.Kind(err) == errors.KindEntityDoesNotExist {
+					c.loggingClient.Debugf("no readings found for deletion by age '%d' nanoseconds: %s", age, err.Error())
+				} else {
+					c.loggingClient.Errorf("failed delete readings by age '%d' nanoseconds: %v", age, err)
+					return err
+				}
 			}
 
 			err := deleteEvents(ctx, tx, sqlStatement, values)
 			if err != nil {
-				c.loggingClient.Errorf("failed delete event by age '%d' nanoseconds: %v", age, err)
-				return err
+				if errors.Kind(err) == errors.KindEntityDoesNotExist {
+					c.loggingClient.Debugf("no events found for deletion by age '%d' nanoseconds: %s", age, err.Error())
+				} else {
+					c.loggingClient.Errorf("failed delete event by age '%d' nanoseconds: %v", age, err)
+					return err
+				}
 			}
 			return nil
 		})
@@ -356,7 +372,7 @@ func deleteEvents(ctx context.Context, tx pgx.Tx, sqlStatement string, args pgx.
 		return pgClient.WrapDBError("event(s) delete failed", err)
 	}
 	if commandTag.RowsAffected() == 0 {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "no event found", nil)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("no event found; SQL statement: %s", sqlStatement), nil)
 	}
 	return nil
 }
