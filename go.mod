@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.46
+	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.47
 	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.22
 	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.18
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.7
@@ -103,7 +103,7 @@ require (
 	github.com/openziti/foundation/v2 v2.0.79 // indirect
 	github.com/openziti/identity v1.0.118 // indirect
 	github.com/openziti/metrics v1.4.2 // indirect
-	github.com/openziti/sdk-golang v1.3.0 // indirect
+	github.com/openziti/sdk-golang v1.3.1 // indirect
 	github.com/openziti/secretstream v0.1.42 // indirect
 	github.com/openziti/transport/v2 v2.0.198 // indirect
 	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect

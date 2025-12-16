@@ -72,8 +72,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/eclipse/paho.mqtt.golang v1.5.1 h1:/VSOv3oDLlpqR2Epjn1Q7b2bSTplJIeV2ISgCl2W7nE=
 github.com/eclipse/paho.mqtt.golang v1.5.1/go.mod h1:1/yJCneuyOoCOzKSsOTUc0AJfpsItBGWvYpBLimhArU=
-github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.46 h1:Hgg6cG/ycDAr3jEuypsSCUBrH4dfIFlCDbWjvyC6VR4=
-github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.46/go.mod h1:RHOsB3mKmmiR3TJWqa2D3XpvaIm6sagLNBEy0ZMjM30=
+github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.47 h1:aQx2Y2YwAxy80kwz5YHjc5JyrMwdd4kF5W62DAbY7dI=
+github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.47/go.mod h1:QnV7v5YyXY59AFCG6jhF4xS4REX4sY6MkxPOoYkYhVk=
 github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.17 h1:TttwsEqLppEQQz4scPbEdzMtsHC8vj1djd2sgZLfny8=
 github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.17/go.mod h1:IlEPPn0CZX1mDBRX8E6nr7BM/MVxMZV5z9zSTo6fUgo=
 github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.22 h1:rV4aHYBoLvlyy9XHBDSC+cXbhiyRotF0RqZVI46Rd7I=
@@ -408,8 +408,8 @@ github.com/openziti/identity v1.0.118 h1:GyIbuabLRHZ+kwQL8voAHnoVzK2U7XcPVqIjZbL
 github.com/openziti/identity v1.0.118/go.mod h1:qrKOXWXxTpNGaB8FrlrMyk1Aw3QZYpTzqyj7uEC4cSo=
 github.com/openziti/metrics v1.4.2 h1:zaBj5DrvRGPWPhS1w7XNkTPyX4KUYwToNGMCtJrkCv8=
 github.com/openziti/metrics v1.4.2/go.mod h1:MOLcoTxhPNla6+NWUCMVTnl1PNqTU40qrbKVa/lVVgg=
-github.com/openziti/sdk-golang v1.3.0 h1:JKY5npUkG1huCcKQcY96qRD53iZTP643GXNtApktur8=
-github.com/openziti/sdk-golang v1.3.0/go.mod h1:qRhOgMHugw374xDmAYN58iX0Slrk9Z7f5zWOKKNaKgo=
+github.com/openziti/sdk-golang v1.3.1 h1:9BfVDYHnaI9v5cliy1KDQZxxLw20+eWI5/2zrjGWg3M=
+github.com/openziti/sdk-golang v1.3.1/go.mod h1:qRhOgMHugw374xDmAYN58iX0Slrk9Z7f5zWOKKNaKgo=
 github.com/openziti/secretstream v0.1.42 h1:BfdbLt+BIDILyfMzxYsBaxtBA0LAe7mRy+ig94BrTPU=
 github.com/openziti/secretstream v0.1.42/go.mod h1:EzCKNdjrVhRBtAorRFx+/V0i1GUPFCP8sL2tCRp+pE4=
 github.com/openziti/transport/v2 v2.0.198 h1:zOr7wAm4s6Icu+BTR5+2ubfKHSu7PRLfZiD0cfjhYUI=
