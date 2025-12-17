@@ -168,7 +168,7 @@ func ParseTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, min
 		return start, end, offset, limit, edgexErr
 	}
 	if end < start {
-		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be greater than start's value %v", end, start), nil)
+		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be less than start's value %v", end, start), nil)
 	}
 	offset, limit, _, edgexErr = ParseGetAllObjectsRequestQueryString(c, minOffset, maxOffset, minLimit, maxLimit)
 	if edgexErr != nil {
@@ -188,7 +188,7 @@ func ParseQueryStringTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffs
 		return start, end, offset, limit, edgexErr
 	}
 	if end < start {
-		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be greater than start's value %v", end, start), nil)
+		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be less than start's value %v", end, start), nil)
 	}
 	offset, limit, _, edgexErr = ParseGetAllObjectsRequestQueryString(c, minOffset, maxOffset, minLimit, maxLimit)
 	if edgexErr != nil {
