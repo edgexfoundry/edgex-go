@@ -28,4 +28,4 @@ scopes:
     - sma
     - deps
     - all
-
+    - core-keeper
