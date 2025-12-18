@@ -25,7 +25,7 @@ scopes:
     - security
     - scheduler
     - notifications
-    - sma
     - deps
     - all
     - core-keeper
+    - keeper
