@@ -39,6 +39,7 @@ func (a *CoreDataApp) AsyncPurgeEvent(ctx context.Context, dic *di.Container) er
 	a.asyncPurgeEventOnce.Do(func() {
 		go func() {
 			timer := time.NewTimer(interval)
+			defer timer.Stop() // ensure timer is stopped to prevent resource leak
 			for {
 				timer.Reset(interval) // since event deletion might take lots of time, restart the timer to recount the time
 				select {
