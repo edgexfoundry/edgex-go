@@ -95,7 +95,7 @@ func getCommandQueryResponseEnvelope(requestEnvelope types.MessageEnvelope, devi
 		commandsResponse = responses.NewMultiDeviceCoreCommandsResponse(requestEnvelope.RequestID, "", http.StatusOK, totalCounts, commands)
 	default:
 		commands, edgexError := application.CommandsByDeviceName(deviceName, dic)
-		if err != nil {
+		if edgexError != nil {
 			return types.MessageEnvelope{}, fmt.Errorf("failed to get commands by device name '%s': %s", deviceName, edgexError.Error())
 		}
 
