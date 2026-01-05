@@ -28,7 +28,8 @@ const (
 	statusFailure = "FAILURE"
 
 	// initialVersion specifies the version when the service introduced schema_migrations table to handle migration
-	// as we introduced the schema_migration in the release of 4.0.0-dev, the initial version is set to 4.0.0-dev
+	// as we introduced the schema_migration in the release of 4.0.0-dev, the initial version is set to 4.0.0-dev.
+	// NOTE: for semver.* 4.0.0-dev is less than 4.0.0
 	initialVersion = "4.0.0-dev"
 )
 
@@ -111,13 +112,27 @@ func (tm *pgTableManager) RunScripts(ctx context.Context) error {
 			tm.serviceKey, migrationTableName, err)
 	}
 
+	// service version does not include -dev and when using the default value, 0.0.0, it requires some care
+	defaultDevVersion, err := semver.Parse("0.0.0")
+	if err != nil {
+		return fmt.Errorf("%s failed to parse default development version: %w", tm.serviceKey, err)
+	}
 	// if the table is empty, the dbVersion will be a dummy semver.Version{}, and insert a record for the initial
-	// version 4.0.0-dev, also assign the dbVersion to 4.0.0-dev
+	// version 4.0.0-dev or the development version 0.0.0-dev, also assign the result to dbVersion.
 	if dbVersion.Equals(semver.Version{}) {
-		dbVersion, err = semver.Parse(initialVersion)
-		if err != nil {
-			return fmt.Errorf("%s failed to parse initial version: %w", tm.serviceKey, err)
+		if tm.serviceVersion.Equals(defaultDevVersion) {
+			// add -dev so the comparison with 0.0.0 behaves as expected
+			dbVersion, err = semver.Parse("0.0.0-dev")
+			if err != nil {
+				return fmt.Errorf("%s failed to parse development version: %w", tm.serviceKey, err)
+			}
+		} else {
+			dbVersion, err = semver.Parse(initialVersion)
+			if err != nil {
+				return fmt.Errorf("%s failed to parse initial version: %w", tm.serviceKey, err)
+			}
 		}
+
 		err = tm.insertVersionRecord(ctx, dbVersion, statusSuccess)
 		if err != nil {
 			return fmt.Errorf("%s failed to insert initial version: %w", tm.serviceKey, err)
@@ -130,7 +145,7 @@ func (tm *pgTableManager) RunScripts(ctx context.Context) error {
 			"above service version %s", tm.serviceKey, dbVersion.String(), migrationTableName, tm.serviceVersion.String())
 	}
 
-	// apply the migration scripts when dbVersion is below service version
+	// apply the migration scripts when dbVersion is below service version or when running dev version
 	if dbVersion.Compare(tm.serviceVersion) < 0 {
 		tm.logger.Infof("db schema version: %s, service version: %s, %s preparing to apply schema migration "+
 			"scripts if any", dbVersion.String(), tm.serviceVersion.String(), tm.serviceKey)
