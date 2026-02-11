@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.51
+	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.52
 	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.25
 	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.18
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.8
@@ -98,14 +98,14 @@ require (
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
-	github.com/openziti/channel/v4 v4.2.50 // indirect
+	github.com/openziti/channel/v4 v4.3.2 // indirect
 	github.com/openziti/edge-api v0.26.52 // indirect
-	github.com/openziti/foundation/v2 v2.0.84 // indirect
-	github.com/openziti/identity v1.0.122 // indirect
+	github.com/openziti/foundation/v2 v2.0.86 // indirect
+	github.com/openziti/identity v1.0.124 // indirect
 	github.com/openziti/metrics v1.4.3 // indirect
-	github.com/openziti/sdk-golang v1.4.0 // indirect
-	github.com/openziti/secretstream v0.1.46 // indirect
-	github.com/openziti/transport/v2 v2.0.205 // indirect
+	github.com/openziti/sdk-golang v1.4.1 // indirect
+	github.com/openziti/secretstream v0.1.47 // indirect
+	github.com/openziti/transport/v2 v2.0.208 // indirect
 	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect
 	github.com/parallaxsecond/parsec-client-go v0.0.0-20221025095442-f0a77d263cf9 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -122,21 +122,21 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	github.com/zitadel/logging v0.6.2 // indirect
-	github.com/zitadel/oidc/v3 v3.45.3 // indirect
+	github.com/zitadel/logging v0.7.0 // indirect
+	github.com/zitadel/oidc/v3 v3.45.4 // indirect
 	github.com/zitadel/schema v1.3.2 // indirect
 	go.mongodb.org/mongo-driver v1.17.6 // indirect
 	go.mozilla.org/pkcs7 v0.9.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel v1.39.0 // indirect
-	go.opentelemetry.io/otel/metric v1.39.0 // indirect
-	go.opentelemetry.io/otel/trace v1.39.0 // indirect
+	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/otel/metric v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/net v0.48.0 // indirect
-	golang.org/x/oauth2 v0.34.0 // indirect
+	golang.org/x/net v0.49.0 // indirect
+	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
-	golang.org/x/term v0.39.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/term v0.40.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
