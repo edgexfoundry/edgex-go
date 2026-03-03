@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2025 IOTech Ltd
+// Copyright (C) 2020-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -112,6 +112,14 @@ func DeviceProfileByName(name string, ctx context.Context, dic *di.Container) (d
 		return deviceProfile, errors.NewCommonEdgeXWrapper(err)
 	}
 	deviceProfile = dtos.FromDeviceProfileModelToDTO(dp)
+
+	// get the linked device count
+	deviceCount, err := dbClient.DeviceCountByProfileName(deviceProfile.Name)
+	if err != nil {
+		return deviceProfile, errors.NewCommonEdgeXWrapper(err)
+	}
+	deviceProfile.LinkedDeviceCount = deviceCount
+
 	return deviceProfile, nil
 }
 
@@ -156,7 +164,7 @@ func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Contain
 	return nil
 }
 
-// AllDeviceProfiles query the device profiles with offset, and limit
+// AllDeviceProfiles query the device profiles with offset, limit, and labels.
 func AllDeviceProfiles(offset int, limit int, labels []string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
@@ -176,6 +184,13 @@ func AllDeviceProfiles(offset int, limit int, labels []string, dic *di.Container
 	deviceProfiles = make([]dtos.DeviceProfile, len(dps))
 	for i, dp := range dps {
 		deviceProfiles[i] = dtos.FromDeviceProfileModelToDTO(dp)
+
+		// get the linked device count for each device profile DTO
+		deviceCount, err := dbClient.DeviceCountByProfileName(dp.Name)
+		if err != nil {
+			return []dtos.DeviceProfile{}, totalCount, errors.NewCommonEdgeXWrapper(err)
+		}
+		deviceProfiles[i].LinkedDeviceCount = deviceCount
 	}
 	return deviceProfiles, totalCount, nil
 }
@@ -289,7 +304,7 @@ func PatchDeviceProfileBasicInfo(ctx context.Context, dto dtos.UpdateDeviceProfi
 	return nil
 }
 
-// AllDeviceProfileBasicInfos query the device profile basic infos with offset, and limit
+// AllDeviceProfileBasicInfos query the device profile basic infos with offset, limit, and labels.
 func AllDeviceProfileBasicInfos(offset int, limit int, labels []string, dic *di.Container) (deviceProfileBasicInfos []dtos.DeviceProfileBasicInfo, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
@@ -309,6 +324,13 @@ func AllDeviceProfileBasicInfos(offset int, limit int, labels []string, dic *di.
 	deviceProfileBasicInfos = make([]dtos.DeviceProfileBasicInfo, len(dps))
 	for i, dp := range dps {
 		deviceProfileBasicInfos[i] = dtos.FromDeviceProfileModelToBasicInfoDTO(dp)
+
+		// get the linked device count for each device profile DTO
+		deviceCount, err := dbClient.DeviceCountByProfileName(dp.Name)
+		if err != nil {
+			return []dtos.DeviceProfileBasicInfo{}, totalCount, errors.NewCommonEdgeXWrapper(err)
+		}
+		deviceProfileBasicInfos[i].LinkedDeviceCount = deviceCount
 	}
 	return deviceProfileBasicInfos, totalCount, nil
 }

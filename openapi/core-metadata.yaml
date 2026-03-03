@@ -325,6 +325,9 @@ components:
           description: Labels used to search for groups of profiles
           items:
             type: string
+        linkedDeviceCount:
+          type: integer
+          description: The total number of devices associated with this profile.
     DeviceProfileBasicInfoRequest:
       description: "Update basic information of an existing profile"
       type: object
@@ -409,6 +412,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeviceCommand'
+        linkedDeviceCount:
+          type: integer
+          description: The total number of devices associated with this profile.
     CreateDeviceProfile:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
@@ -1621,6 +1627,7 @@ components:
               resourceOperations:
                 - deviceResource: "Float32"
                   defaultValue: "0.0123"
+          linkedDeviceCount: 1
         - id: "3edf4fe9-b3b8-4f78-bb94-ff55f7d9f316"
           name: "Device-Modbus-Profile"
           description: "Example of Device-Modbus"
@@ -1643,6 +1650,7 @@ components:
               resourceOperations:
                 - deviceResource: "1"
                   defaultValue: "false"
+          linkedDeviceCount: 0
     GetAllDeviceProfileBasicInfosResponse:
       value:
         apiVersion: "v3"
@@ -1657,6 +1665,7 @@ components:
             model: "Device-Virtual-01"
             labels:
               - device-virtual-example
+            linkedDeviceCount: 1
           - id: "3edf4fe9-b3b8-4f78-bb94-ff55f7d9f316"
             name: "Device-Modbus-Profile"
             description: "Example of Device-Modbus"
@@ -1664,6 +1673,7 @@ components:
             model: "Device-Modbus-01"
             labels:
               - device-modbus-example
+            linkedDeviceCount: 0
     GetAllProvisionWatchersResponse:
       value:
         apiVersion: "v3"
@@ -2597,6 +2607,7 @@ paths:
                     readWrite: "RW"
                     resourceOperations:
                       - deviceResource: "Float32"
+                linkedDeviceCount: 1
         '400':
           description: "Request is in an invalid state"
           headers:
