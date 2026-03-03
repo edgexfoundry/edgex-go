@@ -1248,18 +1248,16 @@ func TestAllDeviceProfiles(t *testing.T) {
 		offset                    string
 		limit                     string
 		labels                    string
-		getLinkedDeviceCount      bool
 		errorExpected             bool
 		expectedCount             int
 		expectedTotalCount        int64
 		expectedLinkedDeviceCount int64
 		expectedStatusCode        int
 	}{
-		{"Valid - get device profiles without labels", "0", "10", "", false, false, 3, expectedTotalProfileCount, 0, http.StatusOK},
-		{"Valid - get device profiles with labels", "0", "5", strings.Join(testDeviceProfileLabels, ","), false, false, 2, expectedTotalProfileCount, 0, http.StatusOK},
-		{"Valid - get device profiles with offset and no labels", "1", "2", "", false, false, 2, expectedTotalProfileCount, 0, http.StatusOK},
-		{"Valid - get device profiles with getLinkedDeviceCount", "0", "10", "", true, false, 3, expectedTotalProfileCount, expectedLinkedDeviceCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), false, true, 0, expectedTotalProfileCount, 0, http.StatusRequestedRangeNotSatisfiable},
+		{"Valid - get device profiles without labels", "0", "10", "", false, 3, expectedTotalProfileCount, expectedLinkedDeviceCount, http.StatusOK},
+		{"Valid - get device profiles with labels", "0", "5", strings.Join(testDeviceProfileLabels, ","), false, 2, expectedTotalProfileCount, expectedLinkedDeviceCount, http.StatusOK},
+		{"Valid - get device profiles with offset and no labels", "1", "2", "", false, 2, expectedTotalProfileCount, expectedLinkedDeviceCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), true, 0, expectedTotalProfileCount, expectedLinkedDeviceCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1270,9 +1268,6 @@ func TestAllDeviceProfiles(t *testing.T) {
 			query.Add(common.Limit, testCase.limit)
 			if len(testCase.labels) > 0 {
 				query.Add(common.Labels, testCase.labels)
-			}
-			if testCase.getLinkedDeviceCount {
-				query.Add(getLinkedDeviceCountParam, common.ValueTrue)
 			}
 			req.URL.RawQuery = query.Encode()
 			require.NoError(t, err)
@@ -1568,18 +1563,16 @@ func TestAllDeviceProfileBasicInfos(t *testing.T) {
 		offset                    string
 		limit                     string
 		labels                    string
-		getLinkedDeviceCount      bool
 		errorExpected             bool
 		expectedCount             int
 		expectedTotalCount        int64
 		expectedLinkedDeviceCount int64
 		expectedStatusCode        int
 	}{
-		{"Valid - get device profile basic infos without labels", "0", "10", "", false, false, 3, expectedTotalProfileCount, 0, http.StatusOK},
-		{"Valid - get device profile basic infos with labels", "0", "5", strings.Join(testDeviceProfileLabels, ","), false, false, 2, expectedTotalProfileCount, 0, http.StatusOK},
-		{"Valid - get device profile basic infos with offset and no labels", "1", "2", "", false, false, 2, expectedTotalProfileCount, 0, http.StatusOK},
-		{"Valid - get device profile basic infos with getLinkedDeviceCount", "0", "10", "", true, false, 3, expectedTotalProfileCount, expectedLinkedDeviceCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), false, true, 0, expectedTotalProfileCount, 0, http.StatusRequestedRangeNotSatisfiable},
+		{"Valid - get device profile basic infos without labels", "0", "10", "", false, 3, expectedTotalProfileCount, expectedLinkedDeviceCount, http.StatusOK},
+		{"Valid - get device profile basic infos with labels", "0", "5", strings.Join(testDeviceProfileLabels, ","), false, 2, expectedTotalProfileCount, expectedLinkedDeviceCount, http.StatusOK},
+		{"Valid - get device profile basic infos with offset and no labels", "1", "2", "", false, 2, expectedTotalProfileCount, expectedLinkedDeviceCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), true, 0, expectedTotalProfileCount, expectedLinkedDeviceCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1590,9 +1583,6 @@ func TestAllDeviceProfileBasicInfos(t *testing.T) {
 			query.Add(common.Limit, testCase.limit)
 			if len(testCase.labels) > 0 {
 				query.Add(common.Labels, testCase.labels)
-			}
-			if testCase.getLinkedDeviceCount {
-				query.Add(getLinkedDeviceCountParam, common.ValueTrue)
 			}
 			req.URL.RawQuery = query.Encode()
 			require.NoError(t, err)

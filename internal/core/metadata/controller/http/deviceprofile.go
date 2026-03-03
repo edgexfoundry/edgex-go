@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2026 IOTech Ltd
+// Copyright (C) 2021-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -29,10 +29,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const (
-	yamlFileName              = "file"
-	getLinkedDeviceCountParam = "getLinkedDeviceCount" // query param to specify whether to calculate the linked device count
-)
+const yamlFileName = "file"
 
 type DeviceProfileController struct {
 	jsonDtoReader io.DtoReader
@@ -267,10 +264,7 @@ func (dc *DeviceProfileController) AllDeviceProfiles(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-
-	// parse URL query string for getLinkedDeviceCount to determine whether to calculate the linked device count for each profile
-	getLinkedDeviceCount := utils.ParseQueryStringToBool(r, getLinkedDeviceCountParam, false)
-	deviceProfiles, totalCount, err := application.AllDeviceProfiles(offset, limit, labels, getLinkedDeviceCount, dc.dic)
+	deviceProfiles, totalCount, err := application.AllDeviceProfiles(offset, limit, labels, dc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -401,11 +395,7 @@ func (dc *DeviceProfileController) AllDeviceProfileBasicInfos(c echo.Context) er
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-
-	// parse URL query string for getLinkedDeviceCount to determine whether to calculate the linked device count for each profile
-	getLinkedDeviceCount := utils.ParseQueryStringToBool(r, getLinkedDeviceCountParam, false)
-
-	deviceProfileBasicInfos, totalCount, err := application.AllDeviceProfileBasicInfos(offset, limit, labels, getLinkedDeviceCount, dc.dic)
+	deviceProfileBasicInfos, totalCount, err := application.AllDeviceProfileBasicInfos(offset, limit, labels, dc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}

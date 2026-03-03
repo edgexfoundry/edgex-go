@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2026 IOTech Ltd
+// Copyright (C) 2021-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -158,40 +158,6 @@ func TestParsePathParamToInt64(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, testCase.expectedStart, start)
 			})
-		})
-	}
-}
-
-func TestParseQueryStringToBool(t *testing.T) {
-	const queryParam = "getLinkedDeviceCount"
-	tests := []struct {
-		name         string
-		queryValue   string
-		omitParam    bool
-		defaultValue bool
-		expected     bool
-	}{
-		{"param absent, default false", "", true, false, false},
-		{"param absent, default true", "", true, true, true},
-		{"value true", "true", false, false, true},
-		{"value false", "false", false, true, false},
-		{"value 1", "1", false, false, true},
-		{"value 0", "0", false, true, false},
-		{"value TRUE", "TRUE", false, false, true},
-		{"invalid value falls back to default false", "invalid", false, false, false},
-		{"invalid value falls back to default true", "invalid", false, true, true},
-	}
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, "/", http.NoBody)
-			require.NoError(t, err)
-			if !testCase.omitParam {
-				query := req.URL.Query()
-				query.Add(queryParam, testCase.queryValue)
-				req.URL.RawQuery = query.Encode()
-			}
-			result := ParseQueryStringToBool(req, queryParam, testCase.defaultValue)
-			assert.Equal(t, testCase.expected, result)
 		})
 	}
 }

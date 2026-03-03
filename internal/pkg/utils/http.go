@@ -158,21 +158,6 @@ func ParseQueryStringToString(r *http.Request, queryStringKey string, defaultVal
 	return value[0]
 }
 
-// ParseQueryStringToBool parses the given query parameter as a boolean using strconv.ParseBool,
-// which accepts "1", "TRUE", "true", "True" as true; "0", "FALSE", "false", "False" as false.
-// Returns defaultValue if the parameter is absent or cannot be parsed.
-func ParseQueryStringToBool(r *http.Request, queryStringKey string, defaultValue bool) bool {
-	value, ok := r.URL.Query()[queryStringKey]
-	if !ok {
-		return defaultValue
-	}
-	b, err := strconv.ParseBool(value[0])
-	if err != nil {
-		return defaultValue
-	}
-	return b
-}
-
 func ParseTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int64, end int64, offset int, limit int, edgexErr errors.EdgeX) {
 	start, edgexErr = ParsePathParamToInt64(c, common.Start, 0, math.MaxInt64)
 	if edgexErr != nil {

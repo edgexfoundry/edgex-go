@@ -327,9 +327,7 @@ components:
             type: string
         linkedDeviceCount:
           type: integer
-          description: |
-            The total number of devices associated with this profile. 
-            This field is populated only when the `getLinkedDeviceCount` query parameter is set to true in the request.
+          description: The total number of devices associated with this profile.
     DeviceProfileBasicInfoRequest:
       description: "Update basic information of an existing profile"
       type: object
@@ -416,9 +414,7 @@ components:
             $ref: '#/components/schemas/DeviceCommand'
         linkedDeviceCount:
           type: integer
-          description: |
-            The total number of devices associated with this profile. 
-            This field is populated only when the `getLinkedDeviceCount` query parameter is set to true in the request.
+          description: The total number of devices associated with this profile.
     CreateDeviceProfile:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
@@ -1206,14 +1202,6 @@ components:
       schema:
         type: string
       description: "Allows for querying a given object by associated user-defined label. More than one label may be specified via a comma-delimited list."
-    getLinkedDeviceCountParam:
-      in: query
-      name: getLinkedDeviceCount
-      required: false
-      schema:
-        type: boolean
-        default: false
-      description: "If true, the linkedDeviceCount field is populated for each returned device profile."
     descendantsParam:
       in: query
       name: descendantsOf
@@ -2521,7 +2509,6 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
       - $ref: '#/components/parameters/labelsParam'
-      - $ref: '#/components/parameters/getLinkedDeviceCountParam'
     get:
       summary: "Given the entire range of device profiles sorted by last modified descending, returns a portion of that range according to the offset and limit parameters. Device profiles may also be filtered by label."
       responses:
@@ -2853,7 +2840,6 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
       - $ref: '#/components/parameters/labelsParam'
-      - $ref: '#/components/parameters/getLinkedDeviceCountParam'
     get:
       summary: "Given the entire range of device profile basic infos sorted by last modified descending, returns a portion of that range according to the offset and limit parameters. Device profiles may also be filtered by label."
       responses:
