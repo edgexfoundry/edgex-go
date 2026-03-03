@@ -300,7 +300,7 @@ func queryOneDevice(ctx context.Context, connPool *pgxpool.Pool, sql string, arg
 	row := connPool.QueryRow(ctx, sql, args...)
 
 	if err := row.Scan(&d); err != nil {
-		return d, pgClient.WrapDBError("failed to query devicee", err)
+		return d, pgClient.WrapDBError("failed to query device", err)
 	}
 	return d, nil
 }
