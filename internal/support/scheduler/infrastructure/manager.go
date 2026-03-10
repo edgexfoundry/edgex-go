@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
@@ -262,37 +263,31 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 				return errors.NewCommonEdgeXWrapper(edgeXerr)
 			}
 
-			// Add event listeners to the job options for recording the schedule action records
+			// Capture the scheduled time in BeforeJobRuns to avoid race condition
+			// where the job may be removed from the scheduler before AfterJobRuns fires.
+			var scheduledAt atomic.Int64
 			jobOptions = append(jobOptions, gocron.WithEventListeners(
+				gocron.BeforeJobRuns(
+					func(jobID uuid.UUID, jobName string) {
+						scheduledAt.Store(time.Now().UnixMilli())
+					}),
 				gocron.AfterJobRuns(
 					func(jobID uuid.UUID, jobName string) {
-						gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
-						lastRun, err := gocronJob.LastRun()
-						if err != nil {
-							m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, err)
-						}
-
 						record := models.ScheduleActionRecord{
 							JobName:     job.Name,
 							Action:      copiedAction,
 							Status:      models.Succeeded,
-							ScheduledAt: lastRun.UnixMilli(),
+							ScheduledAt: scheduledAt.Load(),
 						}
 						m.addScheduleActionRecord(ctx, record, nil)
 					}),
 				gocron.AfterJobRunsWithError(
 					func(jobID uuid.UUID, jobName string, err error) {
-						gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
-						lastRun, timeErr := gocronJob.LastRun()
-						if timeErr != nil {
-							m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, timeErr)
-						}
-
 						record := models.ScheduleActionRecord{
 							JobName:     job.Name,
 							Action:      copiedAction,
 							Status:      models.Failed,
-							ScheduledAt: lastRun.UnixMilli(),
+							ScheduledAt: scheduledAt.Load(),
 						}
 						m.addScheduleActionRecord(ctx, record, err)
 					}),
@@ -334,15 +329,6 @@ func (m *manager) addScheduleActionRecord(ctx context.Context, record models.Sch
 				record.Action.GetBaseScheduleAction().Type, record.Status, record.JobName, newRecord.Id, correlationId)
 		}
 	}
-}
-
-func getGocronJobByID(jobs []gocron.Job, id uuid.UUID) gocron.Job {
-	for _, j := range jobs {
-		if j.ID() == id {
-			return j
-		}
-	}
-	return nil
 }
 
 // arrangeScheduleJob arranges the schedule job based on the startTimestamp and endTimestamp and return the corresponding job options for gocron
