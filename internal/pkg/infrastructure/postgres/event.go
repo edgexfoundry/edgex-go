@@ -13,6 +13,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
+	dbModels "github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/models"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v4/models"
@@ -200,14 +201,10 @@ func (c *Client) DeleteEventById(id string) errors.EdgeX {
 	return nil
 }
 
-// DeleteEventsByDeviceName deletes specific device's events and corresponding readings
-// This function is implemented to starts up two goroutines to delete readings and events in the background to achieve better performance
+// DeleteEventsByDeviceName deletes a device's events and corresponding readings.
+// The async behavior is handled at the application layer so this database call can
+// return real failures instead of hiding data behind mark_deleted on partial errors.
 func (c *Client) DeleteEventsByDeviceName(deviceName string) errors.EdgeX {
-	// update deviceInfo as deletable, then event and reading will not return when the user query event or reading by the specific device
-	if err := c.updateDeviceInfosDeletableByDeviceName(deviceName); err != nil {
-		return errors.NewCommonEdgeX(errors.Kind(err), "delete events by deviceName", err)
-	}
-	// delete events, readings, deviceInfos
 	if err := c.deleteEventsByConditions([]string{deviceNameCol}, pgx.NamedArgs{deviceNameCol: deviceName}); err != nil {
 		return errors.NewCommonEdgeX(errors.Kind(err), "delete events by deviceName", err)
 	}
@@ -219,59 +216,62 @@ func (c *Client) DeleteEventsByDeviceNameAndSourceName(deviceName, sourceName st
 	return c.deleteEventsByConditions([]string{deviceNameCol, sourceNameCol}, pgx.NamedArgs{deviceNameCol: deviceName, sourceNameCol: sourceName})
 }
 
-// deleteEventsByConditions deletes specific device's events and corresponding readings
+// deleteEventsByConditions deletes specific events, readings, and deviceInfos in one
+// transaction so callers only observe success after the delete has actually succeeded.
 func (c *Client) deleteEventsByConditions(cols []string, values pgx.NamedArgs) errors.EdgeX {
 	ctx := context.Background()
 
 	sqlStatement := sqlDeleteEventsByColumn(cols...)
 
-	go func() {
-		// deviceInfos are used to remove data by id and remove the id value from the cache after finishing the transaction
-		deviceInfos, err := c.deviceInfosByConds(cols, values)
-		if err != nil {
-			return
-		}
-		// delete events and readings in a transaction
-		pgxErr := pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
-			// select the event-ids of the specified device name from event table as the sub-query of deleting readings
-			subSqlStatement := sqlQueryEventIdFieldsByCol(cols...)
-			if err = deleteReadingsBySubQuery(ctx, tx, subSqlStatement, values); err != nil {
-				if errors.Kind(err) == errors.KindEntityDoesNotExist {
-					c.loggingClient.Debugf("no readings found for deletion: %s", err.Error())
-				} else {
-					c.loggingClient.Errorf("failed delete readings with conditions '%v' '%v': %v", cols, values, err)
-					return err
-				}
-			}
+	// deviceInfos are removed from the cache only after the transaction commits.
+	deviceInfos, err := c.deviceInfosByConds(cols, values)
+	if err != nil {
+		c.loggingClient.Errorf("failed querying deviceInfos with conditions '%v' '%v': %v", cols, values, err)
+		return errors.NewCommonEdgeXWrapper(err)
+	}
 
-			err = deleteEvents(ctx, tx, sqlStatement, values)
-			if err != nil {
-				if errors.Kind(err) == errors.KindEntityDoesNotExist {
-					c.loggingClient.Debugf("no events found for deletion: %s", err.Error())
-				} else {
-					c.loggingClient.Errorf("failed delete event with conditions '%v' '%v': %v", cols, values, err)
-					return err
-				}
-			}
+	pgxErr := pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
+		return c.deleteEventsByConditionsInTx(ctx, tx, cols, values, sqlStatement, deviceInfos)
+	})
+	if pgxErr != nil {
+		c.loggingClient.Errorf("failed delete events with conditions '%v' '%v': %v", cols, values, pgxErr)
+		return errors.NewCommonEdgeXWrapper(pgxErr)
+	}
 
-			for _, deviceInfo := range deviceInfos {
-				err = deleteDeviceInfoById(ctx, tx, deviceInfo.Id)
-				if err != nil {
-					return errors.NewCommonEdgeXWrapper(err)
-				}
-			}
-			return nil
-		})
-		if pgxErr != nil {
-			c.loggingClient.Errorf("failed delete events with conditions '%v' '%v': %v", cols, values, pgxErr)
-			return
-		}
+	deviceInfoCache := container.DeviceInfoCacheFrom(c.dic.Get)
+	for _, deviceInfo := range deviceInfos {
+		deviceInfoCache.Remove(deviceInfo)
+	}
 
-		deviceInfoCache := container.DeviceInfoCacheFrom(c.dic.Get)
-		for _, deviceInfo := range deviceInfos {
-			deviceInfoCache.Remove(deviceInfo)
+	return nil
+}
+
+func (c *Client) deleteEventsByConditionsInTx(ctx context.Context, tx pgx.Tx, cols []string, values pgx.NamedArgs, sqlStatement string, deviceInfos []dbModels.DeviceInfo) errors.EdgeX {
+	// select the event ids from the event table as the sub-query of deleting readings
+	subSqlStatement := sqlQueryEventIdFieldsByCol(cols...)
+	if err := deleteReadingsBySubQuery(ctx, tx, subSqlStatement, values); err != nil {
+		if errors.Kind(err) == errors.KindEntityDoesNotExist {
+			c.loggingClient.Debugf("no readings found for deletion: %s", err.Error())
+		} else {
+			c.loggingClient.Errorf("failed delete readings with conditions '%v' '%v': %v", cols, values, err)
+			return err
 		}
-	}()
+	}
+
+	if err := deleteEvents(ctx, tx, sqlStatement, values); err != nil {
+		if errors.Kind(err) == errors.KindEntityDoesNotExist {
+			c.loggingClient.Debugf("no events found for deletion: %s", err.Error())
+		} else {
+			c.loggingClient.Errorf("failed delete event with conditions '%v' '%v': %v", cols, values, err)
+			return err
+		}
+	}
+
+	for _, deviceInfo := range deviceInfos {
+		if err := deleteDeviceInfoById(ctx, tx, deviceInfo.Id); err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+	}
 
 	return nil
 }
