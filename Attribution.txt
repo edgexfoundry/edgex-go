@@ -445,3 +445,6 @@ https://github.com/open-telemetry/opentelemetry-go-instrumentation/blob/main/LIC
 
 go.yaml.in/yaml/v3 (Apache 2.0) https://github.com/yaml/go-yaml/tree/v3/
 https://github.com/yaml/go-yaml/blob/v3/LICENSE
+
+github.com/cespare/xxhash/v2 (MIT) https://github.com/cespare/xxhash
+https://github.com/cespare/xxhash/blob/main/LICENSE.txt
