@@ -624,12 +624,15 @@ func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 
 func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 	totalCount := int64(0)
+	totalCountWithValue := int64(1)
+	TestDeviceSkipTotalCount := "TestDevice_1"
 	dic := mocks.NewMockDIC()
 	app := application.NewCoreDataApp(dic)
 
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("ReadingCountByDeviceNameAndResourceNameAndTimeRange", TestDeviceName, TestDeviceResourceName, int64(0), int64(100)).Return(totalCount, nil)
-	dbClientMock.On("ReadingsByDeviceNameAndResourceNameAndTimeRange", TestDeviceName, TestDeviceResourceName, int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
+	dbClientMock.On("ReadingCountByDeviceNameAndResourceNameAndTimeRange", TestDeviceName, TestDeviceResourceName, int64(0), int64(100)).Return(totalCountWithValue, nil)
+	dbClientMock.On("ReadingsByDeviceNameAndResourceNameAndTimeRange", TestDeviceName, TestDeviceResourceName, int64(0), int64(100), 0, 10).Return([]models.Reading{persistedReading}, nil)
+	dbClientMock.On("ReadingsByDeviceNameAndResourceNameAndTimeRange", TestDeviceSkipTotalCount, TestDeviceResourceName, int64(0), int64(100), -1, 10).Return([]models.Reading{persistedReading}, nil)
 	dbClientMock.On("ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange", TestDeviceName, TestDeviceResourceName, validAggFunc, int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -655,7 +658,8 @@ func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 		expectedTotalCount int64
 		expectedStatusCode int
 	}{
-		{"Valid ", TestDeviceName, TestDeviceResourceName, "0", "100", "0", "10", "", false, totalCount, http.StatusOK},
+		{"Valid ", TestDeviceName, TestDeviceResourceName, "0", "100", "0", "10", "", false, totalCountWithValue, http.StatusOK},
+		{"Valid with skip total count ", TestDeviceSkipTotalCount, TestDeviceResourceName, "0", "100", "-1", "10", "", false, totalCount, http.StatusOK},
 		{"Invalid - empty deviceName", "", TestDeviceResourceName, "0", "100", "0", "10", "", true, totalCount, http.StatusBadRequest},
 		{"Invalid - empty resourceName", TestDeviceName, "", "0", "100", "0", "10", "", true, totalCount, http.StatusBadRequest},
 		{"Invalid - invalid start format", TestDeviceName, TestDeviceResourceName, "aaa", "100", "0", "10", "", true, totalCount, http.StatusBadRequest},
@@ -713,18 +717,22 @@ func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 
 func TestReadingsByDeviceNameAndResourceNamesAndTimeRange(t *testing.T) {
 	totalCount := int64(0)
+	totalCountWithValue := int64(1)
 	testResourceNames := []string{"resource01", "resource02"}
 	emptyPayload := make(map[string]interface{})
 	testResourceNamesPayload := emptyPayload
 	testResourceNamesPayload[common.ResourceNames] = testResourceNames
 	dic := mocks.NewMockDIC()
 	app := application.NewCoreDataApp(dic)
+	TestDeviceSkipTotalCount := "TestDevice_1"
 
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("ReadingCountByDeviceNameAndTimeRange", TestDeviceName, int64(0), int64(100)).Return(totalCount, nil)
-	dbClientMock.On("ReadingsByDeviceNameAndTimeRange", TestDeviceName, int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
-	dbClientMock.On("ReadingCountByDeviceNameAndResourceNamesAndTimeRange", TestDeviceName, testResourceNames, int64(0), int64(100)).Return(totalCount, nil)
-	dbClientMock.On("ReadingsByDeviceNameAndResourceNamesAndTimeRange", TestDeviceName, testResourceNames, int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
+	dbClientMock.On("ReadingCountByDeviceNameAndTimeRange", TestDeviceName, int64(0), int64(100)).Return(totalCountWithValue, nil)
+	dbClientMock.On("ReadingsByDeviceNameAndTimeRange", TestDeviceName, int64(0), int64(100), 0, 10).Return([]models.Reading{persistedReading}, nil)
+	dbClientMock.On("ReadingsByDeviceNameAndTimeRange", TestDeviceSkipTotalCount, int64(0), int64(100), -1, 10).Return([]models.Reading{persistedReading}, nil)
+	dbClientMock.On("ReadingCountByDeviceNameAndResourceNamesAndTimeRange", TestDeviceName, testResourceNames, int64(0), int64(100)).Return(totalCountWithValue, nil)
+	dbClientMock.On("ReadingsByDeviceNameAndResourceNamesAndTimeRange", TestDeviceName, testResourceNames, int64(0), int64(100), 0, 10).Return([]models.Reading{persistedReading}, nil)
+	dbClientMock.On("ReadingsByDeviceNameAndResourceNamesAndTimeRange", TestDeviceSkipTotalCount, testResourceNames, int64(0), int64(100), -1, 10).Return([]models.Reading{persistedReading}, nil)
 	dbClientMock.On("ReadingsAggregationByDeviceNameAndTimeRange", TestDeviceName, validAggFunc, int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -750,9 +758,11 @@ func TestReadingsByDeviceNameAndResourceNamesAndTimeRange(t *testing.T) {
 		expectedTotalCount int64
 		expectedStatusCode int
 	}{
-		{"Valid - provide deviceName and nil resourceNames", TestDeviceName, nil, "0", "100", "0", "10", "", false, totalCount, http.StatusOK},
-		{"Valid - provide deviceName and empty resourceNames", TestDeviceName, emptyPayload, "0", "100", "0", "10", "", false, totalCount, http.StatusOK},
-		{"Valid - provide deviceName and resourceNames", TestDeviceName, testResourceNamesPayload, "0", "100", "0", "10", "", false, totalCount, http.StatusOK},
+		{"Valid - provide deviceName and nil resourceNames", TestDeviceName, nil, "0", "100", "0", "10", "", false, totalCountWithValue, http.StatusOK},
+		{"Valid - provide deviceName and empty resourceNames", TestDeviceName, emptyPayload, "0", "100", "0", "10", "", false, totalCountWithValue, http.StatusOK},
+		{"Valid - provide deviceName and empty resourceNames and skip total count", TestDeviceSkipTotalCount, emptyPayload, "0", "100", "-1", "10", "", false, totalCount, http.StatusOK},
+		{"Valid - provide deviceName and resourceNames", TestDeviceName, testResourceNamesPayload, "0", "100", "0", "10", "", false, totalCountWithValue, http.StatusOK},
+		{"Valid - provide deviceName and resourceNames and skip total count", TestDeviceSkipTotalCount, testResourceNamesPayload, "0", "100", "-1", "10", "", false, totalCount, http.StatusOK},
 		{"Invalid - empty deviceName", "", testResourceNamesPayload, "0", "100", "0", "10", "", true, totalCount, http.StatusBadRequest},
 		{"Invalid - invalid start format", TestDeviceName, testResourceNamesPayload, "aaa", "100", "0", "10", "", true, totalCount, http.StatusBadRequest},
 		{"Invalid - invalid end format", TestDeviceName, testResourceNamesPayload, "0", "bbb", "0", "10", "", true, totalCount, http.StatusBadRequest},
