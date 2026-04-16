@@ -166,19 +166,20 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 
 		internalMessageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
 
-		// Request waits for the response and returns it.
-		response, err := internalMessageBus.Request(requestEnvelope, deviceRequestTopic, deviceResponseTopicPrefix, requestTimeout)
-		if err != nil {
-			errorMessage := fmt.Sprintf("Failed to send DeviceCommand request with internal MessageBus: %v", err)
-			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
-			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
-			return
-		}
+		go func() {
+			response, err := internalMessageBus.Request(requestEnvelope, deviceRequestTopic, deviceResponseTopicPrefix, requestTimeout)
+			if err != nil {
+				errorMessage := fmt.Sprintf("Failed to send DeviceCommand request with internal MessageBus: %v", err)
+				responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
+				publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
+				return
+			}
 
-		lc.Debugf("Command response received from internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", response.ReceivedTopic, response.RequestID, response.CorrelationID)
+			lc.Debugf("Command response received from internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", response.ReceivedTopic, response.RequestID, response.CorrelationID)
 
-		response.ReceivedTopic = externalResponseTopic
-		publishMessage(client, externalResponseTopic, qos, retain, *response, lc)
+			response.ReceivedTopic = externalResponseTopic
+			publishMessage(client, externalResponseTopic, qos, retain, *response, lc)
+		}()
 	}
 }
 
