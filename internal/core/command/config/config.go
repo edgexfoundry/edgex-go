@@ -22,13 +22,26 @@ import (
 
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
-	Writable     WritableInfo
-	Clients      bootstrapConfig.ClientsCollection
-	Databases    map[string]bootstrapConfig.Database
-	Registry     bootstrapConfig.RegistryInfo
-	Service      bootstrapConfig.ServiceInfo
-	MessageBus   bootstrapConfig.MessageBusInfo
-	ExternalMQTT bootstrapConfig.ExternalMQTTInfo
+	Writable             WritableInfo
+	Clients              bootstrapConfig.ClientsCollection
+	Databases            map[string]bootstrapConfig.Database
+	Registry             bootstrapConfig.RegistryInfo
+	Service              bootstrapConfig.ServiceInfo
+	MessageBus           bootstrapConfig.MessageBusInfo
+	ExternalMQTT         bootstrapConfig.ExternalMQTTInfo
+	ExternalCommandQueue ExternalCommandQueue
+}
+
+// ExternalCommandQueue bounds concurrency and queuing for external MQTT command requests (see messaging.OnConnectHandler).
+type ExternalCommandQueue struct {
+	// MaxConcurrentExternalCommands is the number of worker goroutines processing external command requests.
+	MaxConcurrentExternalCommands int `yaml:"MaxConcurrentExternalCommands,omitempty"`
+	// MaxQueuedExternalCommands is the capacity of the buffered jobs channel (pending work not yet assigned to a worker).
+	MaxQueuedExternalCommands int `yaml:"MaxQueuedExternalCommands,omitempty"`
+	// OverloadPublishChannelCapacity is the capacity of the channel to the dedicated overload/error MQTT publisher goroutine.
+	OverloadPublishChannelCapacity int `yaml:"OverloadPublishChannelCapacity,omitempty"`
+	// ShutdownTimeout is the maximum duration to wait for workers when the service context is cancelled (e.g. "30s").
+	ShutdownTimeout string `yaml:"ShutdownTimeout,omitempty"`
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.

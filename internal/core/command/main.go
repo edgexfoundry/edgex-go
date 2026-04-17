@@ -102,7 +102,7 @@ func MessagingBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupT
 	}
 
 	if configuration.ExternalMQTT.Enabled {
-		if !handlers.NewExternalMQTT(messaging.OnConnectHandler(requestTimeout, dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
+		if !handlers.NewExternalMQTT(messaging.OnConnectHandler(ctx, requestTimeout, dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
 			return false
 		}
 	}
