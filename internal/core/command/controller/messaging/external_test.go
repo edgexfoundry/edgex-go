@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -73,6 +74,12 @@ func TestOnConnectHandler(t *testing.T) {
 					QoS:    0,
 					Retain: true,
 				},
+				ExternalCommandQueue: config.ExternalCommandQueue{
+					MaxConcurrentExternalCommands:  4,
+					MaxQueuedExternalCommands:      8,
+					OverloadPublishChannelCapacity: 4,
+					ShutdownTimeout:                "30s",
+				},
 			}
 		},
 		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
@@ -101,7 +108,7 @@ func TestOnConnectHandler(t *testing.T) {
 			client.On("Subscribe", testQueryRequestTopic, byte(0), mock.Anything).Return(token)
 			client.On("Subscribe", testExternalCommandRequestTopic, byte(0), mock.Anything).Return(token)
 
-			fn := OnConnectHandler(time.Second*10, dic)
+			fn := OnConnectHandler(context.Background(), time.Second*10, dic)
 			fn(client)
 
 			if tt.expectedSucceed {
@@ -268,6 +275,7 @@ func Test_commandRequestHandler(t *testing.T) {
 	}
 
 	expectedResponse := &types.MessageEnvelope{}
+	baseTopic := "edgex"
 
 	lc := &lcMocks.LoggingClient{}
 	lc.On("Error", mock.Anything).Return(nil)
@@ -282,7 +290,6 @@ func Test_commandRequestHandler(t *testing.T) {
 	dsc.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(deviceServiceResponse, nil)
 	dsc.On("DeviceServiceByName", context.Background(), unknownService).Return(responses.DeviceServiceResponse{}, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "unknown device service", nil))
 	client := &internalMessagingMocks.MessageClient{}
-	client.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(expectedResponse, nil)
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
@@ -300,6 +307,12 @@ func Test_commandRequestHandler(t *testing.T) {
 					Topics: map[string]string{
 						common.CommandResponseTopicPrefixKey: testExternalCommandResponseTopicPrefix,
 					},
+				},
+				ExternalCommandQueue: config.ExternalCommandQueue{
+					MaxConcurrentExternalCommands:  8,
+					MaxQueuedExternalCommands:      16,
+					OverloadPublishChannelCapacity: 4,
+					ShutdownTimeout:                "30s",
 				},
 			}
 		},
@@ -355,7 +368,17 @@ func Test_commandRequestHandler(t *testing.T) {
 			mqttClient := &mocks.Client{}
 			mqttClient.On("Publish", mock.Anything, byte(0), true, mock.Anything).Return(token)
 
-			fn := commandRequestHandler(time.Second*10, dic)
+			requestDone := make(chan struct{}, 1)
+			if !tt.expectedError {
+				client.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Run(func(args mock.Arguments) { requestDone <- struct{}{} }).
+					Return(expectedResponse, nil).Once()
+			}
+
+			proc := newExternalCommandProcessor(context.Background(), time.Second*10, dic, externalCommandLimitsFromConfig(container.ConfigurationFrom(dic.Get).ExternalCommandQueue))
+			proc.setMQTTClient(mqttClient)
+			proc.ensureStarted()
+			fn := proc.commandRequestMQTTHandler()
 			fn(mqttClient, message)
 			if tt.expectedError {
 				if tt.expectedPublishError {
@@ -365,6 +388,12 @@ func Test_commandRequestHandler(t *testing.T) {
 				}
 				lc.AssertCalled(t, "Warn", mock.Anything)
 				return
+			}
+
+			select {
+			case <-requestDone:
+			case <-time.After(3 * time.Second):
+				t.Fatal("timed out waiting for internal MessageBus Request")
 			}
 
 			expectedInternalRequestTopic := common.BuildTopic(baseTopic, common.CoreCommandDeviceRequestPublishTopic, testDeviceServiceName, testDeviceName, testCommandName, testMethod)
@@ -387,4 +416,224 @@ func testCommandRequestPayload() types.MessageEnvelope {
 	})
 
 	return payload
+}
+
+// Test_externalCommand_secondRequestWhileFirstBlocked ensures a second external command can complete
+// internal Request while the first Request is still blocked (no MQTT callback head-of-line blocking).
+func Test_externalCommand_secondRequestWhileFirstBlocked(t *testing.T) {
+	deviceResponse := responses.DeviceResponse{
+		BaseResponse: commonDTO.NewBaseResponse("", "", http.StatusOK),
+		Device: dtos.Device{
+			Name:        testDeviceName,
+			ProfileName: testProfileName,
+			ServiceName: testDeviceServiceName,
+		},
+	}
+	deviceServiceResponse := responses.DeviceServiceResponse{
+		BaseResponse: commonDTO.NewBaseResponse("", "", http.StatusOK),
+		Service: dtos.DeviceService{
+			Name: testDeviceServiceName,
+		},
+	}
+	expectedResponse := &types.MessageEnvelope{}
+
+	lc := &lcMocks.LoggingClient{}
+	lc.On("Error", mock.Anything).Return(nil)
+	lc.On("Errorf", mock.Anything, mock.Anything).Return(nil)
+	lc.On("Debugf", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	dc := &clientMocks.DeviceClient{}
+	dc.On("DeviceByName", context.Background(), testDeviceName).Return(deviceResponse, nil)
+	dsc := &clientMocks.DeviceServiceClient{}
+	dsc.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(deviceServiceResponse, nil)
+
+	unblockFirst := make(chan struct{})
+	var requestPhase atomic.Int32
+
+	msgClient := &internalMessagingMocks.MessageClient{}
+	msgClient.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Run(func(args mock.Arguments) {
+			n := requestPhase.Add(1)
+			if n == 1 {
+				<-unblockFirst
+			}
+		}).Return(expectedResponse, nil)
+
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return &config.ConfigurationStruct{
+				Service: bootstrapConfig.ServiceInfo{
+					Host: mockHost, Port: mockPort, MaxResultCount: 20,
+				},
+				MessageBus: bootstrapConfig.MessageBusInfo{BaseTopicPrefix: "edgex"},
+				ExternalMQTT: bootstrapConfig.ExternalMQTTInfo{
+					QoS: 0, Retain: true,
+					Topics: map[string]string{
+						common.CommandResponseTopicPrefixKey: testExternalCommandResponseTopicPrefix,
+					},
+				},
+				ExternalCommandQueue: config.ExternalCommandQueue{
+					MaxConcurrentExternalCommands:  4,
+					MaxQueuedExternalCommands:      8,
+					OverloadPublishChannelCapacity: 4,
+					ShutdownTimeout:                "30s",
+				},
+			}
+		},
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} { return lc },
+		bootstrapContainer.DeviceClientName:           func(get di.Get) interface{} { return dc },
+		bootstrapContainer.DeviceServiceClientName:    func(get di.Get) interface{} { return dsc },
+		bootstrapContainer.MessagingClientName:        func(get di.Get) interface{} { return msgClient },
+	})
+
+	payload := testCommandRequestPayload()
+	payloadBytes, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	token := &mocks.Token{}
+	token.On("Wait").Return(true)
+	token.On("Error").Return(nil)
+	mqttClient := &mocks.Client{}
+	mqttClient.On("Publish", mock.Anything, byte(0), true, mock.Anything).Return(token)
+
+	proc := newExternalCommandProcessor(context.Background(), time.Second*10, dic,
+		externalCommandLimitsFromConfig(container.ConfigurationFrom(dic.Get).ExternalCommandQueue))
+	proc.setMQTTClient(mqttClient)
+	proc.ensureStarted()
+	handler := proc.commandRequestMQTTHandler()
+
+	message1 := &mocks.Message{}
+	message1.On("Payload").Return(append([]byte(nil), payloadBytes...))
+	message1.On("Topic").Return(testExternalCommandRequestTopicExample)
+	handler(mqttClient, message1)
+
+	require.Eventually(t, func() bool { return requestPhase.Load() >= 1 }, 2*time.Second, 5*time.Millisecond,
+		"first Request should have started")
+
+	message2 := &mocks.Message{}
+	message2.On("Payload").Return(append([]byte(nil), payloadBytes...))
+	message2.On("Topic").Return(testExternalCommandRequestTopicExample)
+
+	done2 := make(chan struct{})
+	go func() {
+		handler(mqttClient, message2)
+		close(done2)
+	}()
+
+	select {
+	case <-done2:
+	case <-time.After(3 * time.Second):
+		close(unblockFirst)
+		t.Fatal("second MQTT handler invocation did not return")
+	}
+
+	require.Eventually(t, func() bool { return requestPhase.Load() >= 2 }, 2*time.Second, 5*time.Millisecond,
+		"second Request should run while first is blocked")
+	close(unblockFirst)
+	time.Sleep(100 * time.Millisecond)
+}
+
+// Test_externalCommand_queueFullOverload exercises non-blocking enqueue when the jobs channel is full.
+func Test_externalCommand_queueFullOverload(t *testing.T) {
+	deviceResponse := responses.DeviceResponse{
+		BaseResponse: commonDTO.NewBaseResponse("", "", http.StatusOK),
+		Device: dtos.Device{
+			Name:        testDeviceName,
+			ProfileName: testProfileName,
+			ServiceName: testDeviceServiceName,
+		},
+	}
+	deviceServiceResponse := responses.DeviceServiceResponse{
+		BaseResponse: commonDTO.NewBaseResponse("", "", http.StatusOK),
+		Service: dtos.DeviceService{
+			Name: testDeviceServiceName,
+		},
+	}
+	expectedResponse := &types.MessageEnvelope{}
+
+	lc := &lcMocks.LoggingClient{}
+	lc.On("Error", mock.Anything).Return(nil)
+	lc.On("Errorf", mock.Anything, mock.Anything).Return(nil)
+	lc.On("Debugf", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	lc.On("Warn", mock.Anything).Return(nil)
+	dc := &clientMocks.DeviceClient{}
+	dc.On("DeviceByName", context.Background(), testDeviceName).Return(deviceResponse, nil)
+	dsc := &clientMocks.DeviceServiceClient{}
+	dsc.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(deviceServiceResponse, nil)
+
+	blockAll := make(chan struct{})
+	var requestEntered atomic.Int32
+	msgClient := &internalMessagingMocks.MessageClient{}
+	msgClient.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Run(func(args mock.Arguments) {
+			requestEntered.Add(1)
+			<-blockAll
+		}).Return(expectedResponse, nil)
+
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return &config.ConfigurationStruct{
+				Service: bootstrapConfig.ServiceInfo{
+					Host: mockHost, Port: mockPort, MaxResultCount: 20,
+				},
+				MessageBus: bootstrapConfig.MessageBusInfo{BaseTopicPrefix: "edgex"},
+				ExternalMQTT: bootstrapConfig.ExternalMQTTInfo{
+					QoS: 0, Retain: true,
+					Topics: map[string]string{
+						common.CommandResponseTopicPrefixKey: testExternalCommandResponseTopicPrefix,
+					},
+				},
+				ExternalCommandQueue: config.ExternalCommandQueue{
+					MaxConcurrentExternalCommands:  1,
+					MaxQueuedExternalCommands:      1,
+					OverloadPublishChannelCapacity: 4,
+					ShutdownTimeout:                "30s",
+				},
+			}
+		},
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} { return lc },
+		bootstrapContainer.DeviceClientName:           func(get di.Get) interface{} { return dc },
+		bootstrapContainer.DeviceServiceClientName:    func(get di.Get) interface{} { return dsc },
+		bootstrapContainer.MessagingClientName:        func(get di.Get) interface{} { return msgClient },
+	})
+
+	payload := testCommandRequestPayload()
+	payloadBytes, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	token := &mocks.Token{}
+	token.On("Wait").Return(true)
+	token.On("Error").Return(nil)
+	var publishCount atomic.Int32
+	mqttClient := &mocks.Client{}
+	mqttClient.On("Publish", mock.Anything, byte(0), true, mock.Anything).
+		Run(func(args mock.Arguments) { publishCount.Add(1) }).
+		Return(token)
+
+	proc := newExternalCommandProcessor(context.Background(), time.Second*10, dic,
+		externalCommandLimitsFromConfig(container.ConfigurationFrom(dic.Get).ExternalCommandQueue))
+	proc.setMQTTClient(mqttClient)
+	proc.ensureStarted()
+	handler := proc.commandRequestMQTTHandler()
+
+	send := func() {
+		message := &mocks.Message{}
+		message.On("Payload").Return(append([]byte(nil), payloadBytes...))
+		message.On("Topic").Return(testExternalCommandRequestTopicExample)
+		handler(mqttClient, message)
+	}
+
+	send()
+	require.Eventually(t, func() bool { return requestEntered.Load() >= 1 },
+		2*time.Second, 5*time.Millisecond, "first internal Request should start")
+	send()
+	time.Sleep(20 * time.Millisecond)
+	send()
+
+	msgClient.AssertNumberOfCalls(t, "Request", 1)
+	// Third message was load-shed; overload response is published via the dedicated publisher.
+	require.Eventually(t, func() bool { return publishCount.Load() >= 1 },
+		2*time.Second, 10*time.Millisecond, "overload response publish")
+
+	close(blockAll)
+	time.Sleep(50 * time.Millisecond)
 }

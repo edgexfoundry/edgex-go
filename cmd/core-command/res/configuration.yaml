@@ -39,6 +39,13 @@ ExternalMQTT:
     CommandQueryRequestTopic: edgex/commandquery/request/#   # for subscribing to 3rd party command query request
     CommandQueryResponseTopic: edgex/commandquery/response   # for publishing responses back to 3rd party systems
 
+# Bounded concurrency for external MQTT command callbacks (non-blocking enqueue; no blocking-on-full-queue mode).
+ExternalCommandQueue:
+  MaxConcurrentExternalCommands: 32
+  MaxQueuedExternalCommands: 64
+  OverloadPublishChannelCapacity: 16
+  ShutdownTimeout: 30s
+
 MessageBus:
   Optional:
     ClientId: core-command
