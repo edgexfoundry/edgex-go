@@ -138,6 +138,10 @@ components:
             topic:
               description: "The topic to which the message will be published."
               type: string
+            useRawPayload:
+              type: boolean
+              default: false
+              description: "Only applicable when type is EDGEXMESSAGEBUS. When true, publishes the message as a raw payload without the EdgeX message envelope."
           required:
             - topic
     MultiScheduleActionRecordsResponse:
@@ -205,6 +209,10 @@ components:
         payload:
           type: string
           format: byte
+        useRawPayload:
+          type: boolean
+          default: false
+          description: "Only applicable when type is EDGEXMESSAGEBUS. When true, publishes the message as a raw payload without the EdgeX message envelope."
       required:
         - type
     ScheduleActionRecord:
@@ -553,6 +561,7 @@ components:
               contentType: "application/json"
               topic: "test_topic"
               payload: "eyJ0ZXN0I"
+              useRawPayload: false
             adminState: "UNLOCKED"
             autoTriggerMissedRecords: false
     MultiScheduleActionRecordsExample:
