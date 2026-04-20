@@ -245,7 +245,7 @@ https://github.com/nats-io/nkeys/blob/master/LICENSE
 github.com/nats-io/nuid (Apache-2.0) https://github.com/nats-io/nuid
 https://github.com/nats-io/nuid/blob/master/LICENSE
 
-github.com/oklog/ulid (Apache 2.0) - https://github.com/oklog/ulid
+github.com/oklog/ulid/v2 (Apache 2.0) - https://github.com/oklog/ulid/v2
 https://github.com/oklog/ulid/blob/main/LICENSE
 
 github.com/opentracing/opentracing-go (Apache 2.0) - https://github.com/opentracing/opentracing-go
