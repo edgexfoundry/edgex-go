@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024-2025 IOTech Ltd
+// Copyright (C) 2024-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -18,6 +18,12 @@ import (
 
 func publishEdgeXMessageBus(dic *di.Container, action models.EdgeXMessageBusAction) errors.EdgeX {
 	messageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
+	if action.UseRawPayload {
+		if err := messageBus.PublishBinaryData(action.Payload, action.Topic); err != nil {
+			return errors.NewCommonEdgeX(errors.KindServerError, "failed to publish the message as a raw payload without the EdgeX message envelope.", err)
+		}
+		return nil
+	}
 	contentType := action.ContentType
 	if contentType == "" {
 		contentType = common.ContentTypeJSON
