@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright (C) 2020-2025 IOTech Ltd
+ *  Copyright (C) 2020-2026 IOTech Ltd
  *  Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -243,24 +243,28 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 		oldServiceName = device.ServiceName
 	}
 
+	oldProfileName := device.ProfileName
+	newProfileName := *dto.ProfileName
 	if container.ConfigurationFrom(dic.Get).Writable.MaxResources > 0 {
-		if err = checkResourceCapacityByExistingAndNewProfile(device.ProfileName, *dto.ProfileName, dic); err != nil {
+		if err = checkResourceCapacityByExistingAndNewProfile(oldProfileName, newProfileName, dic); err != nil {
 			return errors.NewCommonEdgeXWrapper(err)
 		}
 	}
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
-
-	err = validateParentProfileAndAutoEvent(dic, device)
+	if dto.ProfileName != nil && oldProfileName != newProfileName {
+		device, err = validateParentProfileAndAutoEventDropInvalid(dic, device)
+	} else {
+		err = validateParentProfileAndAutoEvent(dic, device)
+	}
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	deviceDTO := dtos.FromDeviceModelToDTO(device)
-
 	// Execute the Device Service Validation when bypassValidation is false by default
 	// Skip the Device Service Validation if bypassValidation is true
 	if !bypassValidation {
+		deviceDTO := dtos.FromDeviceModelToDTO(device)
 		err = validateDeviceCallback(deviceDTO, dic)
 		if err != nil {
 			return errors.NewCommonEdgeXWrapper(err)
@@ -400,38 +404,86 @@ func validateParentProfileAndAutoEvent(dic *di.Container, d models.Device) error
 		// if the profile is not set, skip the validation until we have the profile
 		return nil
 	}
-	if (d.Name == d.Parent) && (d.Name != "") {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "a device cannot be its own parent", nil)
-	}
-	dbClient := container.DBClientFrom(dic.Get)
-	dp, err := dbClient.DeviceProfileByName(d.ProfileName)
+	dp, err := validateParentAndLoadProfile(dic, d)
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device profile '%s' not found during validating device '%s'", d.ProfileName, d.Name), err)
+		return err
 	}
 	if len(d.AutoEvents) == 0 {
 		return nil
 	}
 	for _, a := range d.AutoEvents {
-		_, err := time.ParseDuration(a.Interval)
-		if err != nil {
-			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("auto event interval '%s' not valid in the device '%s'", a.Interval, d.Name), err)
+		if err := validateAutoEvent(a, d, dp); err != nil {
+			return err
 		}
+	}
+	return nil
+}
 
-		regex, regErr := regexp.CompilePOSIX(a.SourceName)
-		if regErr != nil {
-			return errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to CompilePOSIX the auto event source name: "+a.SourceName, regErr)
-		}
-		hasResource := slices.ContainsFunc(dp.DeviceResources, func(r models.DeviceResource) bool {
-			matchedString := regex.FindString(r.Name)
-			return (r.Name == regex.String()) || (r.Name == matchedString)
-		})
+func validateParentProfileAndAutoEventDropInvalid(dic *di.Container, d models.Device) (models.Device, errors.EdgeX) {
+	if d.ProfileName == "" {
+		// if the profile is not set, skip the validation until we have the profile
+		return d, nil
+	}
+	dp, err := validateParentAndLoadProfile(dic, d)
+	if err != nil {
+		return d, err
+	}
+	if len(d.AutoEvents) == 0 {
+		return d, nil
+	}
 
-		hasCommand := slices.ContainsFunc(dp.DeviceCommands, func(c models.DeviceCommand) bool {
-			return c.Name == a.SourceName
-		})
-		if !hasResource && !hasCommand {
-			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("auto event source '%s' cannot be found in the device profile '%s'", a.SourceName, dp.Name), nil)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	validAutoEvents := make([]models.AutoEvent, 0, len(d.AutoEvents))
+	for _, a := range d.AutoEvents {
+		if err := validateAutoEvent(a, d, dp); err != nil {
+			lc.Warnf("Remove auto event: %v, since it's not in Device Profile", err)
+			continue
 		}
+		validAutoEvents = append(validAutoEvents, a)
+	}
+	d.AutoEvents = validAutoEvents
+
+	return d, nil
+}
+
+func validateParentAndLoadProfile(dic *di.Container, d models.Device) (dp models.DeviceProfile, err errors.EdgeX) {
+	if d.Name != "" && d.Name == d.Parent {
+		return dp, errors.NewCommonEdgeX(errors.KindContractInvalid, "a device cannot be its own parent", nil)
+	}
+
+	dbClient := container.DBClientFrom(dic.Get)
+	dp, err = dbClient.DeviceProfileByName(d.ProfileName)
+	if err != nil {
+		return dp, errors.NewCommonEdgeX(
+			errors.KindContractInvalid,
+			fmt.Sprintf("device profile '%s' not found during validating device '%s'", d.ProfileName, d.Name),
+			err,
+		)
+	}
+
+	return dp, nil
+}
+
+func validateAutoEvent(a models.AutoEvent, d models.Device, dp models.DeviceProfile) errors.EdgeX {
+	_, err := time.ParseDuration(a.Interval)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("auto event interval '%s' not valid in the device '%s'", a.Interval, d.Name), err)
+	}
+
+	regex, regErr := regexp.CompilePOSIX(a.SourceName)
+	if regErr != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to CompilePOSIX the auto event source name: "+a.SourceName, regErr)
+	}
+	hasResource := slices.ContainsFunc(dp.DeviceResources, func(r models.DeviceResource) bool {
+		matchedString := regex.FindString(r.Name)
+		return (r.Name == regex.String()) || (r.Name == matchedString)
+	})
+
+	hasCommand := slices.ContainsFunc(dp.DeviceCommands, func(c models.DeviceCommand) bool {
+		return c.Name == a.SourceName
+	})
+	if !hasResource && !hasCommand {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("auto event source '%s' cannot be found in the device profile '%s'", a.SourceName, dp.Name), nil)
 	}
 	return nil
 }

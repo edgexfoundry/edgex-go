@@ -188,6 +188,7 @@ func (dc *DeviceController) PatchDevice(c echo.Context) error {
 	// parse URL query string for bypassValidation
 	bypassValidationParamStr := utils.ParseQueryStringToString(r, bypassValidationQueryParam, common.ValueFalse)
 	if bypassValidationParamStr == common.ValueTrue {
+		lc.Debugf("%s is true. %s=%s", bypassValidationQueryParam, common.CorrelationHeader, correlationId)
 		bypassValidation = true
 	}
 

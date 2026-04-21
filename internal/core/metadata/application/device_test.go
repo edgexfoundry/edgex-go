@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -24,17 +24,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidateParentProfileAndAutoEvents(t *testing.T) {
-	profile := "test-profile"
-	notFountProfileName := "notFoundProfile"
-	source1 := "source1"
-	command1 := "command1"
-	deviceProfile := models.DeviceProfile{
+var (
+	profile             = "test-profile"
+	notFountProfileName = "notFoundProfile"
+	source1             = "source1"
+	source2             = "resource2"
+	command1            = "command1"
+	command2            = "command2"
+	deviceProfile       = models.DeviceProfile{
 		Name:            profile,
-		DeviceResources: []models.DeviceResource{{Name: source1}, {Name: "resource2"}},
-		DeviceCommands:  []models.DeviceCommand{{Name: command1}, {Name: "command2"}},
+		DeviceResources: []models.DeviceResource{{Name: source1}, {Name: source2}},
+		DeviceCommands:  []models.DeviceCommand{{Name: command1}, {Name: command2}},
 	}
+)
 
+func TestValidateParentProfileAndAutoEvents(t *testing.T) {
 	dic := di.NewContainer(di.ServiceConstructorMap{})
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfileByName", profile).Return(deviceProfile, nil)
@@ -123,6 +127,99 @@ func TestValidateParentProfileAndAutoEvents(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateParentProfileAndAutoEventsDropInvalid(t *testing.T) {
+	dic := di.NewContainer(di.ServiceConstructorMap{})
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeviceProfileByName", profile).Return(deviceProfile, nil)
+	dbClientMock.On("DeviceProfileByName", notFountProfileName).Return(models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "not found", nil))
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
+			return logger.NewMockClient()
+		},
+	})
+
+	tests := []struct {
+		name               string
+		device             models.Device
+		expectedAutoEvents int
+		errorExpected      bool
+	}{
+		{"empty profile",
+			models.Device{},
+			0,
+			false,
+		},
+		{"not found profile",
+			models.Device{
+				ProfileName: notFountProfileName,
+			},
+			0,
+			true,
+		},
+		{"no auto events",
+			models.Device{
+				ProfileName: profile,
+			},
+			0,
+			false,
+		},
+		{"is own parent",
+			models.Device{
+				ProfileName: profile,
+				Parent:      "me",
+				Name:        "me",
+				AutoEvents:  []models.AutoEvent{{SourceName: source1, Interval: "1s"}},
+			},
+			0,
+			true,
+		},
+		{"all valid",
+			models.Device{
+				ProfileName: profile,
+				AutoEvents:  []models.AutoEvent{{SourceName: source1, Interval: "1s"}},
+			},
+			1,
+			false,
+		},
+		{"one invalid",
+			models.Device{
+				ProfileName: profile,
+				AutoEvents: []models.AutoEvent{
+					{SourceName: source1, Interval: "1s"},
+					{SourceName: "invalid", Interval: "1s"},
+				},
+			},
+			1,
+			false,
+		},
+		{"all invalid",
+			models.Device{
+				ProfileName: profile,
+				AutoEvents: []models.AutoEvent{
+					{SourceName: "invalid1", Interval: "1s"},
+					{SourceName: "invalid2", Interval: "1s"},
+				},
+			},
+			0,
+			false,
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			d, err := validateParentProfileAndAutoEventDropInvalid(dic, testCase.device)
+			if testCase.errorExpected {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.expectedAutoEvents, len(d.AutoEvents))
 			}
 		})
 	}
