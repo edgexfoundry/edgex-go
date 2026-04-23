@@ -183,3 +183,46 @@ func TestForceAddDevice(t *testing.T) {
 		})
 	}
 }
+
+func TestDeviceById(t *testing.T) {
+	validId := "82eb2e26-0f24-48aa-ae4c-de9dac3fb9bc"
+	notFoundId := "00000000-0000-0000-0000-000000000000"
+	returnedDevice := models.Device{Id: validId, Name: "testDevice"}
+
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
+			return logger.NewMockClient()
+		},
+	})
+
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeviceById", validId).Return(returnedDevice, nil)
+	dbClientMock.On("DeviceById", notFoundId).Return(models.Device{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	tests := []struct {
+		name          string
+		id            string
+		errorExpected bool
+	}{
+		{"Valid - find device by id", validId, false},
+		{"Invalid - empty id", "", true},
+		{"Invalid - device not found by id", notFoundId, true},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			device, err := DeviceById(testCase.id, dic)
+			if testCase.errorExpected {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, validId, device.Id)
+				assert.Equal(t, returnedDevice.Name, device.Name)
+			}
+		})
+	}
+}
