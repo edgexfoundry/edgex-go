@@ -910,6 +910,73 @@ func TestDeviceByName(t *testing.T) {
 	}
 }
 
+func TestDeviceById(t *testing.T) {
+	device := dtos.ToDeviceModel(buildTestDeviceRequest().Device)
+	emptyId := ""
+	notFoundId := "00000000-0000-0000-0000-000000000000"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceById", device.Id).Return(device, nil)
+	dbClientMock.On("DeviceById", notFoundId).Return(models.Device{}, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		deviceId           string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - find device by id", device.Id, false, http.StatusOK},
+		{"Invalid - id parameter is empty", emptyId, true, http.StatusBadRequest},
+		{"Invalid - device not found by id", notFoundId, true, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s/%s", common.ApiDeviceRoute, common.Id, testCase.deviceId)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Id)
+			c.SetParamValues(testCase.deviceId)
+
+			err = controller.DeviceById(c)
+			require.NoError(t, err)
+
+			// Assert
+			if testCase.errorExpected {
+				var res commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.DeviceResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.deviceId, res.Device.Id, "Id not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
 func TestDevicesByProfileName(t *testing.T) {
 	device := dtos.ToDeviceModel(buildTestDeviceRequest().Device)
 	testProfileA := "testProfileA"
