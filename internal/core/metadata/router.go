@@ -75,6 +75,7 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	r.PATCH(common.ApiDeviceRoute, d.PatchDevice, authenticationHook)
 	r.GET(common.ApiAllDeviceRoute, d.AllDevices, authenticationHook)
 	r.GET(common.ApiDeviceByNameRoute, d.DeviceByName, authenticationHook)
+	r.GET(common.ApiDeviceRoute+"/"+common.Id+"/:"+common.Id, d.DeviceById, authenticationHook)
 	r.GET(common.ApiDeviceByProfileNameRoute, d.DevicesByProfileName, authenticationHook)
 
 	// ProvisionWatcher
