@@ -244,7 +244,10 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 	}
 
 	oldProfileName := device.ProfileName
-	newProfileName := *dto.ProfileName
+	newProfileName := oldProfileName
+	if dto.ProfileName != nil {
+		newProfileName = *dto.ProfileName
+	}
 	if container.ConfigurationFrom(dic.Get).Writable.MaxResources > 0 {
 		if err = checkResourceCapacityByExistingAndNewProfile(oldProfileName, newProfileName, dic); err != nil {
 			return errors.NewCommonEdgeXWrapper(err)
@@ -252,7 +255,7 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 	}
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
-	if dto.ProfileName != nil && oldProfileName != newProfileName {
+	if oldProfileName != newProfileName {
 		device, err = validateParentProfileAndAutoEventDropInvalid(dic, device)
 	} else {
 		err = validateParentProfileAndAutoEvent(dic, device)
