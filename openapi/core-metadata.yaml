@@ -2114,6 +2114,89 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
+  '/device/id/{id}':
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: "The universally unique identifier (UUID) of the device you wish to retrieve."
+    get:
+      summary: "Returns a device by its UUID"
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceResponse'
+              example:
+                apiVersion: "v3"
+                requestId: "75ca2b65-f8ef-44f7-a995-a29c53ce111b"
+                statusCode: 200
+                device:
+                  id: "55b68fcf-0fd2-445a-9fae-670b37fb9274"
+                  name: "Random-Boolean-Device"
+                  description: "Example of Device Virtual"
+                  created: 1600926440123
+                  modified: 1600928666321
+                  adminState: "UNLOCKED"
+                  operatingState: "UP"
+                  labels:
+                    - device-virtual-example
+                  location: ""
+                  serviceName: "device-virtual"
+                  profileName: "Random-Boolean-Device"
+                  autoEvents:
+                    - interval: "10s"
+                      onChange: false
+                      sourceName: "Bool"
+                  protocols:
+                    other:
+                      Address: "device-virtual-bool-01"
+                      Port: "300"
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '404':
+          description: "The requested resource does not exist"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   '/device/profile/name/{name}':
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'

@@ -272,6 +272,25 @@ func (dc *DeviceController) DeviceByName(c echo.Context) error {
 	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
+func (dc *DeviceController) DeviceById(c echo.Context) error {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
+	ctx := r.Context()
+
+	// URL parameters
+	id := c.Param(common.Id)
+
+	device, err := application.DeviceById(id, dc.dic)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+
+	response := responseDTO.NewDeviceResponse("", "", http.StatusOK, device)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
+}
+
 func (dc *DeviceController) DevicesByProfileName(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	r := c.Request()

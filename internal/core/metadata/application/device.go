@@ -373,6 +373,20 @@ func DeviceByName(name string, dic *di.Container) (device dtos.Device, err error
 	return device, nil
 }
 
+// DeviceById query the device by id
+func DeviceById(id string, dic *di.Container) (device dtos.Device, err errors.EdgeX) {
+	if id == "" {
+		return device, errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+	}
+	dbClient := container.DBClientFrom(dic.Get)
+	d, err := dbClient.DeviceById(id)
+	if err != nil {
+		return device, errors.NewCommonEdgeXWrapper(err)
+	}
+	device = dtos.FromDeviceModelToDTO(d)
+	return device, nil
+}
+
 // DevicesByProfileName query the devices with offset, limit, and profile name
 func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Container) (devices []dtos.Device, totalCount int64, err errors.EdgeX) {
 	if profileName == "" {
