@@ -369,6 +369,9 @@ func Test_commandRequestHandler(t *testing.T) {
 
 			expectedInternalRequestTopic := common.BuildTopic(baseTopic, common.CoreCommandDeviceRequestPublishTopic, testDeviceServiceName, testDeviceName, testCommandName, testMethod)
 			expectedInternalResponseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, testDeviceServiceName)
+			require.Eventually(t, func() bool {
+				return mqttClient.AssertNumberOfCalls(new(testing.T), "Publish", 1)
+			}, time.Second, time.Millisecond*10)
 			client.AssertCalled(t, "Request", tt.payload, expectedInternalRequestTopic, expectedInternalResponseTopicPrefix, mock.Anything)
 		})
 	}
