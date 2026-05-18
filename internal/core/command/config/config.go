@@ -22,13 +22,21 @@ import (
 
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
-	Writable     WritableInfo
-	Clients      bootstrapConfig.ClientsCollection
-	Databases    map[string]bootstrapConfig.Database
-	Registry     bootstrapConfig.RegistryInfo
-	Service      bootstrapConfig.ServiceInfo
-	MessageBus   bootstrapConfig.MessageBusInfo
-	ExternalMQTT bootstrapConfig.ExternalMQTTInfo
+	Writable        WritableInfo
+	Clients         bootstrapConfig.ClientsCollection
+	Databases       map[string]bootstrapConfig.Database
+	Registry        bootstrapConfig.RegistryInfo
+	Service         bootstrapConfig.ServiceInfo
+	MessageBus      bootstrapConfig.MessageBusInfo
+	ExternalMQTT    bootstrapConfig.ExternalMQTTInfo
+	ExternalCommand ExternalCommandInfo
+}
+
+// ExternalCommandInfo configures handling of inbound external (MQTT) command requests.
+type ExternalCommandInfo struct {
+	// MaxConcurrentRequests caps in-flight external MQTT command requests so a slow/offline
+	// device cannot starve the Paho callback. Values <= 0 fall back to the built-in default.
+	MaxConcurrentRequests int
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.

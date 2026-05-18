@@ -39,6 +39,9 @@ ExternalMQTT:
     CommandQueryRequestTopic: edgex/commandquery/request/#   # for subscribing to 3rd party command query request
     CommandQueryResponseTopic: edgex/commandquery/response   # for publishing responses back to 3rd party systems
 
+ExternalCommand:
+  MaxConcurrentRequests: 32   # cap on in-flight external MQTT commands; <=0 uses built-in default (32)
+
 MessageBus:
   Optional:
     ClientId: core-command

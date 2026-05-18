@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022-2025 IOTech Ltd
+// Copyright (C) 2022-2026 IOTech Ltd
 // Copyright (C) 2023 Intel Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -355,7 +356,8 @@ func Test_commandRequestHandler(t *testing.T) {
 			mqttClient := &mocks.Client{}
 			mqttClient.On("Publish", mock.Anything, byte(0), true, mock.Anything).Return(token)
 
-			fn := commandRequestHandler(time.Second*10, dic)
+			sem := make(chan struct{}, defaultMaxConcurrentExternalCommands)
+			fn := commandRequestHandler(time.Second*10, sem, dic)
 			fn(mqttClient, message)
 			if tt.expectedError {
 				if tt.expectedPublishError {
@@ -369,7 +371,10 @@ func Test_commandRequestHandler(t *testing.T) {
 
 			expectedInternalRequestTopic := common.BuildTopic(baseTopic, common.CoreCommandDeviceRequestPublishTopic, testDeviceServiceName, testDeviceName, testCommandName, testMethod)
 			expectedInternalResponseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, testDeviceServiceName)
-			client.AssertCalled(t, "Request", tt.payload, expectedInternalRequestTopic, expectedInternalResponseTopicPrefix, mock.Anything)
+			// Request now runs in a goroutine — wait for it.
+			require.Eventually(t, func() bool {
+				return client.AssertCalled(new(testing.T), "Request", tt.payload, expectedInternalRequestTopic, expectedInternalResponseTopicPrefix, mock.Anything)
+			}, time.Second, 10*time.Millisecond)
 		})
 	}
 }
@@ -387,4 +392,171 @@ func testCommandRequestPayload() types.MessageEnvelope {
 	})
 
 	return payload
+}
+
+// newCommandRequestDIC builds a DIC and MessageClient that runs runRequest before responding to
+// Request. Shared helper for the concurrency tests below.
+func newCommandRequestDIC(t *testing.T, runRequest func(args mock.Arguments)) (*di.Container, *internalMessagingMocks.MessageClient) {
+	t.Helper()
+
+	deviceResponse := responses.DeviceResponse{
+		BaseResponse: commonDTO.NewBaseResponse("", "", http.StatusOK),
+		Device: dtos.Device{
+			Name:        testDeviceName,
+			ProfileName: testProfileName,
+			ServiceName: testDeviceServiceName,
+		},
+	}
+	deviceServiceResponse := responses.DeviceServiceResponse{
+		BaseResponse: commonDTO.NewBaseResponse("", "", http.StatusOK),
+		Service:      dtos.DeviceService{Name: testDeviceServiceName},
+	}
+
+	lc := &lcMocks.LoggingClient{}
+	lc.On("Error", mock.Anything).Return(nil)
+	lc.On("Errorf", mock.Anything, mock.Anything).Return(nil)
+	lc.On("Debugf", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	lc.On("Warn", mock.Anything).Return(nil)
+	lc.On("Warnf", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	dc := &clientMocks.DeviceClient{}
+	dc.On("DeviceByName", context.Background(), testDeviceName).Return(deviceResponse, nil)
+	dsc := &clientMocks.DeviceServiceClient{}
+	dsc.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(deviceServiceResponse, nil)
+
+	msgClient := &internalMessagingMocks.MessageClient{}
+	call := msgClient.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	if runRequest != nil {
+		call = call.Run(runRequest)
+	}
+	call.Return(&types.MessageEnvelope{}, nil)
+
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return &config.ConfigurationStruct{
+				Service:    bootstrapConfig.ServiceInfo{Host: mockHost, Port: mockPort, MaxResultCount: 20},
+				MessageBus: bootstrapConfig.MessageBusInfo{BaseTopicPrefix: "edgex"},
+				ExternalMQTT: bootstrapConfig.ExternalMQTTInfo{
+					QoS: 0, Retain: true,
+					Topics: map[string]string{
+						common.CommandResponseTopicPrefixKey: testExternalCommandResponseTopicPrefix,
+					},
+				},
+			}
+		},
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} { return lc },
+		bootstrapContainer.DeviceClientName:           func(get di.Get) interface{} { return dc },
+		bootstrapContainer.DeviceServiceClientName:    func(get di.Get) interface{} { return dsc },
+		bootstrapContainer.MessagingClientName:        func(get di.Get) interface{} { return msgClient },
+	})
+
+	return dic, msgClient
+}
+
+// Test_commandRequestHandler_secondRunsWhileFirstBlocked proves the fix: a second external command
+// can complete the internal Request while the first is still blocked, i.e. no head-of-line blocking
+// on the Paho callback goroutine.
+func Test_commandRequestHandler_secondRunsWhileFirstBlocked(t *testing.T) {
+	unblockFirst := make(chan struct{})
+	var phase atomic.Int32
+
+	dic, msgClient := newCommandRequestDIC(t, func(_ mock.Arguments) {
+		if phase.Add(1) == 1 {
+			<-unblockFirst
+		}
+	})
+
+	payloadBytes, err := json.Marshal(testCommandRequestPayload())
+	require.NoError(t, err)
+
+	token := &mocks.Token{}
+	token.On("Wait").Return(true)
+	token.On("Error").Return(nil)
+	mqttClient := &mocks.Client{}
+	mqttClient.On("Publish", mock.Anything, byte(0), true, mock.Anything).Return(token)
+
+	sem := make(chan struct{}, 4)
+	handler := commandRequestHandler(10*time.Second, sem, dic)
+
+	msg := func() *mocks.Message {
+		m := &mocks.Message{}
+		m.On("Payload").Return(payloadBytes)
+		m.On("Topic").Return(testExternalCommandRequestTopicExample)
+		return m
+	}
+
+	handler(mqttClient, msg())
+	require.Eventually(t, func() bool { return phase.Load() >= 1 }, 2*time.Second, 5*time.Millisecond,
+		"first Request should have started")
+
+	done := make(chan struct{})
+	go func() {
+		handler(mqttClient, msg())
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		close(unblockFirst)
+		t.Fatal("second MQTT handler invocation blocked while first Request was in flight — HOL regression")
+	}
+
+	require.Eventually(t, func() bool { return phase.Load() >= 2 }, 2*time.Second, 5*time.Millisecond,
+		"second Request should run while first is blocked")
+	close(unblockFirst)
+
+	// Drain so workers can release the semaphore before the test ends.
+	require.Eventually(t, func() bool { return len(sem) == 0 }, 2*time.Second, 5*time.Millisecond)
+	_ = msgClient
+}
+
+// Test_commandRequestHandler_busyOnOverload proves the backpressure path: when the in-flight
+// budget is exhausted, further requests are rejected inline with an error envelope and the
+// internal Request is NOT invoked again.
+func Test_commandRequestHandler_busyOnOverload(t *testing.T) {
+	blockAll := make(chan struct{})
+	var entered atomic.Int32
+
+	dic, msgClient := newCommandRequestDIC(t, func(_ mock.Arguments) {
+		entered.Add(1)
+		<-blockAll
+	})
+
+	payloadBytes, err := json.Marshal(testCommandRequestPayload())
+	require.NoError(t, err)
+
+	token := &mocks.Token{}
+	token.On("Wait").Return(true)
+	token.On("Error").Return(nil)
+	var publishCount atomic.Int32
+	mqttClient := &mocks.Client{}
+	mqttClient.On("Publish", mock.Anything, byte(0), true, mock.Anything).
+		Run(func(_ mock.Arguments) { publishCount.Add(1) }).
+		Return(token)
+
+	sem := make(chan struct{}, 1) // capacity-1 so the second request must overload
+	handler := commandRequestHandler(10*time.Second, sem, dic)
+
+	msg := func() *mocks.Message {
+		m := &mocks.Message{}
+		m.On("Payload").Return(payloadBytes)
+		m.On("Topic").Return(testExternalCommandRequestTopicExample)
+		return m
+	}
+
+	handler(mqttClient, msg())
+	require.Eventually(t, func() bool { return entered.Load() == 1 }, 2*time.Second, 5*time.Millisecond,
+		"first internal Request should have started")
+
+	handler(mqttClient, msg()) // second — should be rejected inline
+
+	// Internal Request must still have been called only once; the second was load-shed.
+	msgClient.AssertNumberOfCalls(t, "Request", 1)
+	// The rejection publishes a busy envelope on the response topic.
+	require.Eventually(t, func() bool { return publishCount.Load() >= 1 }, 2*time.Second, 5*time.Millisecond,
+		"busy response should be published for the rejected request")
+
+	close(blockAll)
+	require.Eventually(t, func() bool { return len(sem) == 0 }, 2*time.Second, 5*time.Millisecond)
 }
