@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022-2025 IOTech Ltd
+// Copyright (C) 2022-2026 IOTech Ltd
 // Copyright (C) 2023 Intel Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -24,7 +24,22 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 )
 
+// defaultMaxConcurrentExternalCommands caps in-flight external MQTT command requests so a single
+// slow/offline device cannot block the Paho callback goroutine and starve subsequent commands.
+// At capacity, new requests are rejected inline with a "service busy" response envelope —
+// queuing further would just delay the same failure.
+const defaultMaxConcurrentExternalCommands = 32
+
 func OnConnectHandler(requestTimeout time.Duration, dic *di.Container) mqtt.OnConnectHandler {
+	// Resolved once at service start; captured by the subscribe closure so it survives MQTT
+	// reconnects. Hot-reload is intentionally not supported — resizing the channel mid-flight
+	// would orphan in-flight work.
+	maxInFlight := container.ConfigurationFrom(dic.Get).ExternalCommand.MaxConcurrentRequests
+	if maxInFlight <= 0 {
+		maxInFlight = defaultMaxConcurrentExternalCommands
+	}
+	sem := make(chan struct{}, maxInFlight)
+
 	return func(client mqtt.Client) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		config := container.ConfigurationFrom(dic.Get)
@@ -39,7 +54,7 @@ func OnConnectHandler(requestTimeout time.Duration, dic *di.Container) mqtt.OnCo
 		}
 
 		requestCommandTopic := externalTopics[common.CommandRequestTopicKey]
-		if token := client.Subscribe(requestCommandTopic, qos, commandRequestHandler(requestTimeout, dic)); token.Wait() && token.Error() != nil {
+		if token := client.Subscribe(requestCommandTopic, qos, commandRequestHandler(requestTimeout, sem, dic)); token.Wait() && token.Error() != nil {
 			lc.Errorf("could not subscribe to topic '%s': %s", requestCommandTopic, token.Error().Error())
 		} else {
 			lc.Debugf("Subscribed to topic '%s' on external MQTT broker", requestCommandTopic)
@@ -92,7 +107,7 @@ func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 	}
 }
 
-func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt.MessageHandler {
+func commandRequestHandler(requestTimeout time.Duration, sem chan struct{}, dic *di.Container) mqtt.MessageHandler {
 	return func(client mqtt.Client, message mqtt.Message) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		config := container.ConfigurationFrom(dic.Get)
@@ -164,21 +179,38 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 		lc.Debugf("Sending Command request to internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", deviceRequestTopic, requestEnvelope.RequestID, requestEnvelope.CorrelationID)
 		lc.Debugf("Expecting response on topic: %s/%s", deviceResponseTopicPrefix, requestEnvelope.RequestID)
 
-		internalMessageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
-
-		// Request waits for the response and returns it.
-		response, err := internalMessageBus.Request(requestEnvelope, deviceRequestTopic, deviceResponseTopicPrefix, requestTimeout)
-		if err != nil {
-			errorMessage := fmt.Sprintf("Failed to send DeviceCommand request with internal MessageBus: %v", err)
-			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
-			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
+		// Non-blocking acquire — never block the Paho callback goroutine. At capacity we reject
+		// inline rather than queue, so a stuck device cannot cause head-of-line blocking on
+		// subsequent external command requests.
+		select {
+		case sem <- struct{}{}:
+		default:
+			lc.Warnf("external command in-flight limit (%d) reached; rejecting request for device '%s'", cap(sem), deviceName)
+			busy := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID,
+				"core-command busy: too many concurrent external commands")
+			publishMessage(client, externalResponseTopic, qos, retain, busy, lc)
 			return
 		}
 
-		lc.Debugf("Command response received from internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", response.ReceivedTopic, response.RequestID, response.CorrelationID)
+		internalMessageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
 
-		response.ReceivedTopic = externalResponseTopic
-		publishMessage(client, externalResponseTopic, qos, retain, *response, lc)
+		go func() {
+			defer func() { <-sem }()
+
+			response, err := internalMessageBus.Request(requestEnvelope, deviceRequestTopic, deviceResponseTopicPrefix, requestTimeout)
+			if err != nil {
+				errorMessage := fmt.Sprintf("Failed to send DeviceCommand request with internal MessageBus: %v", err)
+				publishMessage(client, externalResponseTopic, qos, retain,
+					types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage), lc)
+				return
+			}
+
+			lc.Debugf("Command response received from internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", response.ReceivedTopic, response.RequestID, response.CorrelationID)
+			// Copy before mutating: concurrent goroutines must not share the same *MessageEnvelope.
+			out := *response
+			out.ReceivedTopic = externalResponseTopic
+			publishMessage(client, externalResponseTopic, qos, retain, out, lc)
+		}()
 	}
 }
 
