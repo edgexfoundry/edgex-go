@@ -12,6 +12,89 @@
 - [go-mod-secrets](https://github.com/edgexfoundry/go-mod-secrets/blob/main/CHANGELOG.md)
 - [go-mod-configuration](https://github.com/edgexfoundry/go-mod-configuration/blob/main/CHANGELOG.md) (indirect dependency)
 
+## [4.0.2] - 2026-05-31
+
+### ✨ Features 
+- Allow event reading query to return numeric value ([#5234](https://github.com/edgexfoundry/edgex-go/issues/5234)) ([#4476c2f8](https://github.com/edgexfoundry/edgex-go/commits/4476c2f8))
+- Allow Support Scheduler to send MQTT messages using raw payload ([#d7d4ce48](https://github.com/edgexfoundry/edgex-go/commits/d7d4ce48))
+- Store numeric value in numeric type ([#5232](https://github.com/edgexfoundry/edgex-go/issues/5232)) ([#c5c61481](https://github.com/edgexfoundry/edgex-go/commits/c5c61481))
+- Support `linkedDeviceCount` to device profile list APIs ([#5376](https://github.com/edgexfoundry/edgex-go/issues/5376)) ([#31488391](https://github.com/edgexfoundry/edgex-go/commits/31488391))
+- Enhance reading query performance ([#c64bbd42](https://github.com/edgexfoundry/edgex-go/commits/c64bbd42))
+- Add indexes on `reading.device_info_id` and `event.device_info_id` ([#d87a39f4](https://github.com/edgexfoundry/edgex-go/commits/d87a39f4))
+- Add PATCH tags API to Core Metadata ([#91370b8a](https://github.com/edgexfoundry/edgex-go/commits/91370b8a))
+- Improve insecure encryption key handling ([#5290](https://github.com/edgexfoundry/edgex-go/issues/5290)) ([#7edac800](https://github.com/edgexfoundry/edgex-go/commits/7edac800))
+- Support secure AES key generation and AES-GCM with CBC fallback ([#5241](https://github.com/edgexfoundry/edgex-go/issues/5241)) ([#20a28d32](https://github.com/edgexfoundry/edgex-go/commits/20a28d32))
+- Query events without total count ([#5135](https://github.com/edgexfoundry/edgex-go/issues/5135)) ([#580d7674](https://github.com/edgexfoundry/edgex-go/commits/580d7674))
+- Add event_id index on Core Data reading table ([#5190](https://github.com/edgexfoundry/edgex-go/issues/5190)) ([#92d5141f](https://github.com/edgexfoundry/edgex-go/commits/92d5141f))
+- Add `%` to Core Keeper allowed characters regex string ([#5287](https://github.com/edgexfoundry/edgex-go/issues/5287)) ([#676951d9](https://github.com/edgexfoundry/edgex-go/commits/676951d9))
+- Add Postgres ConnPool Configuration ([#5226](https://github.com/edgexfoundry/edgex-go/issues/5226)) ([#dda98da8](https://github.com/edgexfoundry/edgex-go/commits/dda98da8))
+- Add `SendChangedReadingsOnly` configuration to `common-config` ([#5204](https://github.com/edgexfoundry/edgex-go/issues/5204)) ([#2680d720](https://github.com/edgexfoundry/edgex-go/commits/2680d720))
+- Publish key change event after key deletion ([#5200](https://github.com/edgexfoundry/edgex-go/issues/5200)) ([#37d2bc2b](https://github.com/edgexfoundry/edgex-go/commits/37d2bc2b))
+- Improve SQL query performance in Core Keeper ([#5199](https://github.com/edgexfoundry/edgex-go/issues/5199)) ([#a7e0c8df](https://github.com/edgexfoundry/edgex-go/commits/a7e0c8df))
+- Improve SQL query performance in  Support Services ([#5198](https://github.com/edgexfoundry/edgex-go/issues/5198)) ([#558ac52a](https://github.com/edgexfoundry/edgex-go/commits/558ac52a))
+- Improve SQL query performance in Core Metadata ([#5196](https://github.com/edgexfoundry/edgex-go/issues/5196)) ([#965d7912](https://github.com/edgexfoundry/edgex-go/commits/965d7912))
+- Improve SQL query performance in Core Data ([#5195](https://github.com/edgexfoundry/edgex-go/issues/5195)) ([#f033e20b](https://github.com/edgexfoundry/edgex-go/commits/f033e20b))
+- Filter out invalid auto events for `PatchDevice` in Core Metadata([#32c02cdd](https://github.com/edgexfoundry/edgex-go/commits/32c02cdd))
+- Retrieve device json using its UUID in Core Metadata([#72cf5f42](https://github.com/edgexfoundry/edgex-go/commits/72cf5f42))
+- Allow multiple tags to be selected during a docker build ([#5179](https://github.com/edgexfoundry/edgex-go/issues/5179)) ([#78a2866f](https://github.com/edgexfoundry/edgex-go/commits/78a2866f))
+
+### 🐛 Bug Fixes
+- Fix the incorrect reading value with trailing zero ([#4dd75c8b](https://github.com/edgexfoundry/edgex-go/commits/4dd75c8b))
+- Fix error when using an empty scheme in REST channel ([#6667adc3](https://github.com/edgexfoundry/edgex-go/commits/6667adc3))
+- Add offset and limit clauses to aggregate readings ([#5247](https://github.com/edgexfoundry/edgex-go/issues/5247)) ([#c7ff2430](https://github.com/edgexfoundry/edgex-go/commits/c7ff2430))
+- Handle default development versions during database migration ([#d3d6d707](https://github.com/edgexfoundry/edgex-go/commits/d3d6d707))
+- Fix newline interpretation in `docker_base` make target ([#c69c6aa4](https://github.com/edgexfoundry/edgex-go/commits/c69c6aa4))
+- Fix variable checking error  ([#de2d4177](https://github.com/edgexfoundry/edgex-go/commits/de2d4177))
+- Stop timer on context cancellation for EventPurge ([#b4ca428a](https://github.com/edgexfoundry/edgex-go/commits/b4ca428a))
+- Correct time range validation error message ([#1d434028](https://github.com/edgexfoundry/edgex-go/commits/1d434028))
+- Close HTTP response body in Core Keeper health check ([#bf871de2](https://github.com/edgexfoundry/edgex-go/commits/bf871de2))
+- Allow arbitrary values by setting `additionalProperties: true`([#703ac010](https://github.com/edgexfoundry/edgex-go/commits/703ac010))
+- Update `ADD_BUILD_TAGS` argument in the Core Keeper Dockerfile ([#6e9e37a8](https://github.com/edgexfoundry/edgex-go/commits/6e9e37a8))
+- Resolve nil pointer panic in scheduler action record callbacks ([#4e1825f1](https://github.com/edgexfoundry/edgex-go/commits/4e1825f1))
+- Fix Windows path handling in database initialization SQL ([#5170](https://github.com/edgexfoundry/edgex-go/issues/5170)) ([#67eb838e](https://github.com/edgexfoundry/edgex-go/commits/67eb838e))
+- Fix two SonarQube scan failures ([#f49538fc](https://github.com/edgexfoundry/edgex-go/commits/f49538fc))
+- Modify `SendChangedReadingsOnly` default value to false ([#5205](https://github.com/edgexfoundry/edgex-go/issues/5205)) ([#be3afd34](https://github.com/edgexfoundry/edgex-go/commits/be3afd34))
+- Apply default retention policies to non-autoEvents in Core Data ([#5189](https://github.com/edgexfoundry/edgex-go/issues/5189)) ([#9304f160](https://github.com/edgexfoundry/edgex-go/commits/9304f160))
+- Run Message Bus command request processing in goroutines ([#5186](https://github.com/edgexfoundry/edgex-go/issues/5186)) ([#82c539f3](https://github.com/edgexfoundry/edgex-go/commits/82c539f3))
+- Fix incorrect event query results when EventPurge is enabled ([#5177](https://github.com/edgexfoundry/edgex-go/issues/5177)) ([#6e66f30d](https://github.com/edgexfoundry/edgex-go/commits/6e66f30d))
+- Fix incorrect totalCount returned by the Core Command device query API ([#5174](https://github.com/edgexfoundry/edgex-go/issues/5174)) ([#7a10d068](https://github.com/edgexfoundry/edgex-go/commits/7a10d068))
+- Fix common configuration bootstrap startup failures in non-security mode ([#5237](https://github.com/edgexfoundry/edgex-go/issues/5237)) ([#f4c84d42](https://github.com/edgexfoundry/edgex-go/commits/f4c84d42))
+- Fix Core Command device query API handling when profiles are empty ([#5164](https://github.com/edgexfoundry/edgex-go/issues/5164)) ([#de361d4a](https://github.com/edgexfoundry/edgex-go/commits/de361d4a))
+- Add missing properties in `UpdateDeviceService` schema ([#a5d34896](https://github.com/edgexfoundry/edgex-go/commits/a5d34896))
+- Avoid panic in Core Metadata when patching a device with a nil `profileName` ([#4a29ef11](https://github.com/edgexfoundry/edgex-go/commits/4a29ef11))
+- Make OpenBao log level configurable for security services ([#a578dab8](https://github.com/edgexfoundry/edgex-go/commits/a578dab8))
+- Ensure new common configurations from the file are applied ([#5230](https://github.com/edgexfoundry/edgex-go/issues/5230)) ([#b3d597d8](https://github.com/edgexfoundry/edgex-go/commits/b3d597d8))
+- Handle missing entities gracefully during event cleanup ([#795e09bc](https://github.com/edgexfoundry/edgex-go/commits/795e09bc))
+
+### ♻ Code Refactoring 
+- Move reading model retrieval logic into separate functions ([#630e2b44](https://github.com/edgexfoundry/edgex-go/commits/630e2b44))
+- Fix gosec errors as scanned by golanci-lint v2.5.0 ([#ffa2c0df](https://github.com/edgexfoundry/edgex-go/commits/ffa2c0df))
+- Fix staticcheck issues as reported by golint v2 scan ([#db620706](https://github.com/edgexfoundry/edgex-go/commits/db620706))
+- Fix errcheck issues as reported by golint v2 ([#e7601f78](https://github.com/edgexfoundry/edgex-go/commits/e7601f78))
+- Move `BuildCoreCommands` to `go-mod-core-contracts` ([#edb53817](https://github.com/edgexfoundry/edgex-go/commits/edb53817))
+- Refactor core data app layer code ([#8e2a8d4a](https://github.com/edgexfoundry/edgex-go/commits/8e2a8d4a))
+- Move the `validateEvent` to utils package for reuse ([#3faf4792](https://github.com/edgexfoundry/edgex-go/commits/3faf4792))
+- Refactor the code to use single variable for schema name ([#6669c57b](https://github.com/edgexfoundry/edgex-go/commits/6669c57b))
+
+### 📖 Documentation 
+- Correct Readings API schema in documentation ([#7e950c51](https://github.com/edgexfoundry/edgex-go/commits/7e950c51))
+- Add missing `jsonObject` parameter in `GET /device/name/{name}/{command}` ([#e3378250](https://github.com/edgexfoundry/edgex-go/commits/e3378250))
+- Add missing `ObjectReading` in Event Readings schema ([#f57081b8](https://github.com/edgexfoundry/edgex-go/commits/f57081b8))
+- Correct Core Keeper API documentation ([#fd4644a0](https://github.com/edgexfoundry/edgex-go/commits/fd4644a0))
+- Correct typo from allof to allOf in `discoveredDevice` schema ([#b5b66df4](https://github.com/edgexfoundry/edgex-go/commits/b5b66df4))
+- Correct schema definition for `discoveredDevice` ([#9ed2b589](https://github.com/edgexfoundry/edgex-go/commits/9ed2b589))
+- Update Core Metadata API documentation with correct sample ([#794c76fd](https://github.com/edgexfoundry/edgex-go/commits/794c76fd))
+- Update Core Data API documentation ([#5127](https://github.com/edgexfoundry/edgex-go/issues/5127)) ([#285c4605](https://github.com/edgexfoundry/edgex-go/commits/285c4605))
+- Modify `aggregateFunc` query parameter in Core Data API documentation ([#4acbbee9](https://github.com/edgexfoundry/edgex-go/commits/4acbbee9))
+- Add missing retention field on Core Metadata API documentation ([#74d29b70](https://github.com/edgexfoundry/edgex-go/commits/74d29b70))
+
+### 👷 Build  
+- Update goVersion to 1.25, golangci-lint to 2.5.0, and Alpine to 3.22 ([#c81763fb](https://github.com/edgexfoundry/edgex-go/commits/c81763fb))
+- Set timeout option for running lint ([#031e6f19](https://github.com/edgexfoundry/edgex-go/commits/031e6f19))
+- Update `.gitignore` to avoid missing debug packages ([#d2a6870f](https://github.com/edgexfoundry/edgex-go/commits/d2a6870f))
+
+
+
 ## [4.0.0] Odessa - 2025-03-12 (Only compatible with the 4.x releases)
 
 ### Features✨  
