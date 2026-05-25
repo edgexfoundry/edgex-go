@@ -1,0 +1,94 @@
+/*
+	Copyright NetFoundry Inc.
+
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+	https://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+*/
+
+package tls
+
+import (
+	"fmt"
+	"io"
+	"time"
+
+	"github.com/openziti/identity"
+	"github.com/openziti/transport/v2"
+	"github.com/pkg/errors"
+)
+
+var _ transport.Address = &address{} // enforce that address implements transport.Address
+
+const Type = "tls"
+
+type address struct {
+	hostname string
+	port     uint16
+}
+
+func (a address) Dial(name string, i *identity.TokenId, timeout time.Duration, tcfg transport.Configuration) (transport.Conn, error) {
+	proxyConfig, err := tcfg.GetProxyConfiguration()
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to get proxy configuration")
+	}
+	return Dial(a, name, i, timeout, proxyConfig, tcfg.Protocols()...)
+}
+
+func (a address) DialWithLocalBinding(name string, localBinding string, i *identity.TokenId, timeout time.Duration, tcfg transport.Configuration) (transport.Conn, error) {
+	proxyConfig, err := tcfg.GetProxyConfiguration()
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to get proxy configuration")
+	}
+	return DialWithLocalBinding(a, name, localBinding, i, timeout, proxyConfig, tcfg.Protocols()...)
+}
+
+func (a address) Listen(name string, i *identity.TokenId, acceptF func(transport.Conn), tcfg transport.Configuration) (io.Closer, error) {
+	return Listen(a.bindableAddress(), name, i, acceptF, tcfg.Protocols()...)
+}
+
+func (a address) MustListen(name string, i *identity.TokenId, acceptF func(transport.Conn), tcfg transport.Configuration) io.Closer {
+	closer, err := a.Listen(name, i, acceptF, tcfg)
+	if err != nil {
+		panic(err)
+	}
+	return closer
+}
+
+func (a address) String() string {
+	return fmt.Sprintf("%s:%s", Type, a.bindableAddress())
+}
+
+func (a address) bindableAddress() string {
+	return transport.HostPortString(a.hostname, a.port)
+}
+
+func (a address) Type() string {
+	return Type
+}
+
+func (a address) Hostname() string {
+	return a.hostname
+}
+
+func (a address) Port() uint16 {
+	return a.port
+}
+
+type AddressParser struct{}
+
+func (ap AddressParser) Parse(s string) (transport.Address, error) {
+	host, port, err := transport.ParseAddressHostPort(s, Type)
+	if err != nil {
+		return nil, err
+	}
+	return &address{hostname: host, port: port}, nil
+}
