@@ -20,7 +20,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cast v1.10.0
-	github.com/spiffe/go-spiffe/v2 v2.6.0
+	github.com/spiffe/go-spiffe/v2 v2.7.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.53.0
 	gopkg.in/yaml.v3 v3.0.1
