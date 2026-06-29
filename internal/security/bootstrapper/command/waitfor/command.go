@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -182,8 +183,9 @@ func (c *cmd) waitForFile(fileUri url.URL) {
 		ticker := time.NewTicker(c.retryInterval)
 		defer ticker.Stop()
 		var err error
+		filePath := filePathFromURL(uri)
 		for range ticker.C {
-			if _, err = os.Stat(uri.Path); err == nil {
+			if _, err = os.Stat(filePath); err == nil {
 				c.loggingClient.Infof("File %s had been generated", uri.String())
 				return
 			} else if os.IsNotExist(err) {
@@ -197,6 +199,44 @@ func (c *cmd) waitForFile(fileUri url.URL) {
 			}
 		}
 	}(fileUri)
+}
+
+func filePathFromURL(fileUri url.URL) string {
+	return filePathFromURLForOS(fileUri, runtime.GOOS)
+}
+
+func filePathFromURLForOS(fileUri url.URL, goos string) string {
+	filePath := fileUri.Path
+	if goos == "windows" {
+		host := fileUri.Host
+		if strings.EqualFold(host, "localhost") {
+			host = ""
+		}
+		if isWindowsDriveHost(host) {
+			filePath = host + filePath
+		} else if host != "" && filePath != "" && filePath != "/" {
+			filePath = "//" + host + filePath
+		} else if len(filePath) >= 3 && filePath[0] == '/' && filePath[2] == ':' {
+			filePath = filePath[1:]
+		}
+	}
+	return filePathFromSlashForOS(filePath, goos)
+}
+
+func filePathFromSlashForOS(filePath string, goos string) string {
+	if goos == "windows" {
+		return strings.ReplaceAll(filePath, "/", "\\")
+	}
+
+	return filePath
+}
+
+func isWindowsDriveHost(host string) bool {
+	if len(host) != 2 || host[1] != ':' {
+		return false
+	}
+
+	return (host[0] >= 'A' && host[0] <= 'Z') || (host[0] >= 'a' && host[0] <= 'z')
 }
 
 func (c *cmd) waitForSocket(scheme, addr string) {
