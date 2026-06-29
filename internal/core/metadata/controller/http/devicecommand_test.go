@@ -276,6 +276,29 @@ func TestPatchDeviceProfileDeviceCommand(t *testing.T) {
 	}
 }
 
+func TestPatchDeviceProfileDeviceCommand_BadBodyReturnsBadRequest(t *testing.T) {
+	dic := mockDic()
+	controller := NewDeviceCommandController(dic)
+	assert.NotNil(t, controller)
+
+	e := echo.New()
+	req, err := http.NewRequest(http.MethodPatch, common.ApiDeviceProfileDeviceCommandRoute, strings.NewReader("false"))
+	require.NoError(t, err)
+
+	recorder := httptest.NewRecorder()
+	c := e.NewContext(req, recorder)
+	err = controller.PatchDeviceProfileDeviceCommand(c)
+	require.NoError(t, err)
+
+	var res commonDTO.BaseResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &res)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.StatusBadRequest, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode, "BaseResponse status code not as expected")
+	assert.Contains(t, res.Message, "json: cannot unmarshal bool")
+}
+
 func TestDeleteDeviceCommandByName(t *testing.T) {
 	dpModel := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	notFoundName := "notFoundName"

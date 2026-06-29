@@ -3,11 +3,13 @@ package io
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
 	dto "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
+	edgexErrors "github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 
 	"github.com/fxamacker/cbor/v2"
 	"github.com/stretchr/testify/assert"
@@ -70,6 +72,18 @@ func TestJsonReader_Read(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestJsonReader_ReadInvalidBodyReturnsContractInvalid(t *testing.T) {
+	var reqDTOs []dto.AddEventRequest
+	reader := NewDtoReader(common.ContentTypeJSON)
+
+	err := reader.Read(bytes.NewReader([]byte("false")), &reqDTOs)
+
+	require.Error(t, err)
+	assert.Equal(t, edgexErrors.KindContractInvalid, edgexErrors.Kind(err))
+	assert.Equal(t, http.StatusBadRequest, err.Code())
+	assert.Contains(t, err.Message(), "json: cannot unmarshal bool")
 }
 
 func TestCborReader_Read(t *testing.T) {
