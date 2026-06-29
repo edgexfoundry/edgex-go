@@ -197,8 +197,6 @@ components:
       required:
         - id
         - deviceName
-        - profileName
-        - sourceName
         - origin
         - readings
     ErrorResponse:
