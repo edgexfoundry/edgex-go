@@ -6,11 +6,11 @@
 package utils
 
 import (
-	"errors"
 	"testing"
 	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger/mocks"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCheckMinInterval(t *testing.T) {
@@ -22,7 +22,8 @@ func TestCheckMinInterval(t *testing.T) {
 
 	warnMsg := "the interval value '%s' is smaller than the suggested value '%s', which might cause abnormal CPU increase"
 	errMsg := "failed to parse the interval duration string %s to a duration time value: %v"
-	expectedErr := errors.New("time: invalid duration \"" + invalidInterval + "\"")
+	_, expectedErr := time.ParseDuration(invalidInterval)
+	require.Error(t, expectedErr)
 
 	lcMock := &mocks.LoggingClient{}
 	lcMock.On("Warnf", warnMsg, validInterval, minInterval1)
