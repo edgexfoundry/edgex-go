@@ -23,7 +23,7 @@ FROM ghcr.io/spiffe/spire-server:1.13.3 as spire_server
 FROM ghcr.io/spiffe/spire-agent:1.13.3 as spire_agent
 
 # Deployment image
-FROM alpine:3.22
+FROM alpine:3.23.2
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
