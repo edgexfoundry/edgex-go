@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -33,6 +33,10 @@ const (
 	// validationTag is the tag used to validate the ScheduleJob internally and then remove those jobs from the scheduler by this tag
 	validationTag = "::validation::"
 )
+
+// errOutsideWindow signals the before-run gate to skip a run outside the job's ActiveYearlyTimeWindow.
+// gocron only needs a non-nil error to skip; the value itself is never inspected.
+var errOutsideWindow = errors.NewCommonEdgeX(errors.KindStatusConflict, "skipped: outside active yearly time window", nil)
 
 type manager struct {
 	lc             logger.LoggingClient
@@ -255,6 +259,8 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 			jobOptions = append(jobOptions, endOption)
 		}
 
+		window := job.Definition.GetBaseScheduleDef().ActiveYearlyTimeWindow
+
 		// If toTrigger is true, the ScheduleAction will be added to the scheduler and ready to be triggered
 		for _, a := range job.Actions {
 			copiedAction := a
@@ -267,6 +273,18 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 			// where the job may be removed from the scheduler before AfterJobRuns fires.
 			var scheduledAt atomic.Int64
 			jobOptions = append(jobOptions, gocron.WithEventListeners(
+				// Skip the run when it falls outside the active yearly time window (nil = no constraint).
+				// Returning an error makes gocron skip before the task fires and writes no record.
+				gocron.BeforeJobRunsSkipIfBeforeFuncErrors(
+					func(jobID uuid.UUID, jobName string) error {
+						now := time.Now()
+						if window != nil && !action.InWindow(now, *window) {
+							m.lc.Debugf("Skipping scheduled run of job %s on %s: current date is outside its active yearly time window (%d/%d - %d/%d)",
+								job.Name, now.Format("2006-01-02"), window.StartMonth, window.StartDay, window.EndMonth, window.EndDay)
+							return errOutsideWindow
+						}
+						return nil
+					}),
 				gocron.BeforeJobRuns(
 					func(jobID uuid.UUID, jobName string) {
 						scheduledAt.Store(time.Now().UnixMilli())

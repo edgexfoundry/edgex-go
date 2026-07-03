@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -23,6 +23,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/application/action"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 )
 
@@ -183,6 +184,20 @@ func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container,
 		if err != nil {
 			lc.Errorf("Failed to generate missed records of job: %s. Correlation-ID: %s", job.Name, correlationId)
 			return errors.NewCommonEdgeXWrapper(err), len(missedRecords) > 0
+		}
+
+		// Drop missed runs that fell outside the active yearly time window: while the service was down those
+		// ticks were never supposed to fire, so they are not "missed".
+		if window := job.Definition.GetBaseScheduleDef().ActiveYearlyTimeWindow; window != nil {
+			filtered := make([]time.Time, 0, len(missedRuns))
+			for _, run := range missedRuns {
+				if action.InWindow(run, *window) {
+					filtered = append(filtered, run)
+				}
+			}
+			lc.Debugf("job %s: %d of %d missed runs are outside the active yearly time window and were dropped. Correlation-ID: %s",
+				job.Name, len(missedRuns)-len(filtered), len(missedRuns), correlationId)
+			missedRuns = filtered
 		}
 
 		if len(missedRuns) != 0 {
