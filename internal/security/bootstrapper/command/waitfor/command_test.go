@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -122,6 +123,7 @@ func TestExecute(t *testing.T) {
 	}
 
 	waitFile := filepath.Join(path, testFile)
+	waitFileURI := fileURI(waitFile)
 
 	testHttpSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -140,13 +142,13 @@ func TestExecute(t *testing.T) {
 		{"Good: waitFor with existing tcp server with retryInterval", []string{"--uri=tcp://" + testSrv, "--retryInterval=2s"},
 			time.Duration(6 * time.Second), false},
 		{"Good: waitFor with existing testFile",
-			[]string{"--uri=file://" + waitFile}, defaultWaitTimeout, false},
+			[]string{"--uri=" + waitFileURI}, defaultWaitTimeout, false},
 		{"Good: waitFor with existing tcp server and testFile",
-			[]string{"--uri=tcp://" + testSrv, "--uri=file://" + waitFile}, defaultWaitTimeout, false},
+			[]string{"--uri=tcp://" + testSrv, "--uri=" + waitFileURI}, defaultWaitTimeout, false},
 		{"Good: waitFor with existing tcp server and testFile and timeout",
-			[]string{"--uri=tcp://" + testSrv, "--uri=file://" + waitFile, "--timeout=5s"}, defaultWaitTimeout, false},
+			[]string{"--uri=tcp://" + testSrv, "--uri=" + waitFileURI, "--timeout=5s"}, defaultWaitTimeout, false},
 		{"Good: waitFor with existing tcp server and testFile and retryInterval",
-			[]string{"--uri=tcp://" + testSrv, "--uri=file://" + waitFile, "--retryInterval=2s"}, defaultWaitTimeout, false},
+			[]string{"--uri=tcp://" + testSrv, "--uri=" + waitFileURI, "--retryInterval=2s"}, defaultWaitTimeout, false},
 		{"Good: waitFor with existing http server", []string{"--uri=" + testHttpSrv.URL}, defaultWaitTimeout, false},
 		{"Bad: waitFor with malformed URL", []string{"--uri=_http!@xxxxxx:1111"}, time.Duration(2 * time.Second), true},
 		{"Bad: waitFor with no tcp server response", []string{"--uri=tcp://non-existing:1111", "--timeout=3s"},
@@ -200,6 +202,56 @@ func TestExecute(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFilePathFromURLForOS(t *testing.T) {
+	tests := []struct {
+		name     string
+		rawURL   string
+		goos     string
+		expected string
+	}{
+		{"Windows drive file URI", "file:///C:/Program%20Files/edgex", "windows",
+			`C:\Program Files\edgex`},
+		{"Windows localhost drive file URI", "file://localhost/C:/Program%20Files/edgex", "windows",
+			`C:\Program Files\edgex`},
+		{"Windows non-RFC drive file URI", "file://C:/Program%20Files/edgex", "windows",
+			`C:\Program Files\edgex`},
+		{"Windows UNC file URI", "file://server/share/path", "windows",
+			`\\server\share\path`},
+		{"Windows host-only file URI", "file://non-existing-file", "windows", ""},
+		{"Linux file URI", "file:///var/lib/edgex", "linux", "/var/lib/edgex"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fileURL, err := url.Parse(tt.rawURL)
+			require.NoError(t, err)
+
+			require.Equal(t, tt.expected, filePathFromURLForOS(*fileURL, tt.goos))
+		})
+	}
+}
+
+func TestFileURI(t *testing.T) {
+	testPath := filepath.Join(t.TempDir(), "file with space#suffix")
+
+	rawURI := fileURI(testPath)
+	require.NotContains(t, rawURI, " ")
+	require.NotContains(t, rawURI, "#")
+
+	fileURL, err := url.Parse(rawURI)
+	require.NoError(t, err)
+	require.Equal(t, "file", fileURL.Scheme)
+	require.Equal(t, filepath.Clean(testPath), filepath.Clean(filePathFromURL(*fileURL)))
+}
+
+func fileURI(path string) string {
+	slashedPath := filepath.ToSlash(path)
+	if filepath.VolumeName(path) != "" {
+		slashedPath = "/" + slashedPath
+	}
+	return (&url.URL{Scheme: "file", Path: slashedPath}).String()
 }
 
 func getTestConfig(timeout, retryInterval string) *config.ConfigurationStruct {
