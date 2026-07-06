@@ -15,6 +15,7 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
@@ -185,32 +186,20 @@ func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container,
 			return errors.NewCommonEdgeXWrapper(err), len(missedRecords) > 0
 		}
 
-		// Drop missed runs that fell outside the active yearly time window: while the service was down those
-		// ticks were never supposed to fire, so they are not "missed".
-		if window := job.Definition.GetBaseScheduleDef().ActiveYearlyTimeWindow; window != nil {
-			filtered := make([]time.Time, 0, len(missedRuns))
-			for _, run := range missedRuns {
-				if action.InWindow(run, *window) {
-					filtered = append(filtered, run)
-				}
-			}
-			lc.Debugf("job %s: %d of %d missed runs are outside the active yearly time window and were dropped. Correlation-ID: %s",
-				job.Name, len(missedRuns)-len(filtered), len(missedRuns), correlationId)
-			missedRuns = filtered
+		// Drop missed runs that fell outside the active yearly time window; those ticks were never supposed to fire.
+		missedRuns, err = filterRunsByActiveWindow(lc, job, missedRuns, correlationId)
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err), len(missedRecords) > 0
 		}
 
-		if len(missedRuns) != 0 {
-			for _, run := range missedRuns {
-				actionRecord := models.ScheduleActionRecord{
-					JobName:     job.Name,
-					Action:      latestRecord.Action,
-					Status:      models.Missed,
-					ScheduledAt: run.UnixMilli(),
-				}
-
-				missedRecords = append(missedRecords, actionRecord)
-				lc.Tracef("Missed schedule action record with action id: %s of job: %s have been generated successfully. Correlation-ID: %s", actionId, job.Name, correlationId)
-			}
+		for _, run := range missedRuns {
+			missedRecords = append(missedRecords, models.ScheduleActionRecord{
+				JobName:     job.Name,
+				Action:      latestRecord.Action,
+				Status:      models.Missed,
+				ScheduledAt: run.UnixMilli(),
+			})
+			lc.Tracef("Missed schedule action record with action id: %s of job: %s have been generated successfully. Correlation-ID: %s", actionId, job.Name, correlationId)
 		}
 	}
 
@@ -222,6 +211,32 @@ func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container,
 	lc.Debugf("Missed schedule action records for job: %s have been created successfully. Correlation-ID: %s", job.Name, correlationId)
 
 	return nil, len(missedRecords) > 0
+}
+
+// filterRunsByActiveWindow removes missed runs that fall outside the job's active yearly time window. Each run
+// is evaluated in the schedule's timezone: INTERVAL runs come from time.UnixMilli (UTC), so without this the
+// day could be off by one in non-UTC deployments. When no window is set, the runs are returned unchanged.
+func filterRunsByActiveWindow(lc logger.LoggingClient, job models.ScheduleJob, runs []time.Time, correlationId string) ([]time.Time, errors.EdgeX) {
+	window := job.Definition.GetBaseScheduleDef().ActiveYearlyTimeWindow
+	if window == nil {
+		return runs, nil
+	}
+
+	windowLoc, err := action.WindowLocation(job.Definition)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid,
+			fmt.Sprintf("failed to resolve timezone for active yearly time window of job: %s", job.Name), err)
+	}
+
+	filtered := make([]time.Time, 0, len(runs))
+	for _, run := range runs {
+		if action.InWindow(run.In(windowLoc), *window) {
+			filtered = append(filtered, run)
+		}
+	}
+	lc.Debugf("job %s: %d of %d missed runs are outside the active yearly time window and were dropped. Correlation-ID: %s",
+		job.Name, len(runs)-len(filtered), len(runs), correlationId)
+	return filtered, nil
 }
 
 // AsyncPurgeRecord purge schedule action records according to the retention capability.

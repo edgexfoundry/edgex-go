@@ -8,6 +8,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -250,86 +251,9 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 	// Add options for the scheduled job based on the startTimestamp and endTimestamp
 	toTrigger, startOption, endOption := m.arrangeScheduleJob(ctx, job)
 	if toTrigger {
-		window := job.Definition.GetBaseScheduleDef().ActiveYearlyTimeWindow
-
-		// Resolve the timezone once so the window is evaluated against the schedule's calendar day.
-		windowLoc := time.Local
-		if window != nil {
-			loc, err := action.WindowLocation(job.Definition)
-			if err != nil {
-				return errors.NewCommonEdgeX(errors.KindContractInvalid,
-					fmt.Sprintf("failed to resolve timezone for active yearly time window of job: %s", job.Name), err)
-			}
-			windowLoc = loc
+		if edgeXerr := m.startJobActions(ctx, scheduler, definition, job, startOption, endOption); edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
 		}
-
-		// If toTrigger is true, the ScheduleAction will be added to the scheduler and ready to be triggered
-		for _, a := range job.Actions {
-			copiedAction := a
-			task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
-			if edgeXerr != nil {
-				return errors.NewCommonEdgeXWrapper(edgeXerr)
-			}
-
-			var jobOptions []gocron.JobOption
-			if startOption != nil {
-				jobOptions = append(jobOptions, startOption)
-			}
-			if endOption != nil {
-				jobOptions = append(jobOptions, endOption)
-			}
-
-			// Capture the scheduled time in BeforeJobRuns to avoid race condition
-			// where the job may be removed from the scheduler before AfterJobRuns fires.
-			var scheduledAt atomic.Int64
-			jobOptions = append(jobOptions, gocron.WithEventListeners(
-				// Skip the run when it falls outside the active yearly time window (nil = no constraint).
-				// Returning an error makes gocron skip before the task fires and writes no record.
-				gocron.BeforeJobRunsSkipIfBeforeFuncErrors(
-					func(jobID uuid.UUID, jobName string) error {
-						now := time.Now().In(windowLoc)
-						if window != nil && !action.InWindow(now, *window) {
-							m.lc.Debugf("Skipping scheduled run of job %s on %s: current date is outside its active yearly time window (%d/%d - %d/%d)",
-								job.Name, now.Format("2006-01-02"), window.StartMonth, window.StartDay, window.EndMonth, window.EndDay)
-							return errOutsideWindow
-						}
-						return nil
-					}),
-				gocron.BeforeJobRuns(
-					func(jobID uuid.UUID, jobName string) {
-						scheduledAt.Store(time.Now().UnixMilli())
-					}),
-				gocron.AfterJobRuns(
-					func(jobID uuid.UUID, jobName string) {
-						record := models.ScheduleActionRecord{
-							JobName:     job.Name,
-							Action:      copiedAction,
-							Status:      models.Succeeded,
-							ScheduledAt: scheduledAt.Load(),
-						}
-						m.addScheduleActionRecord(ctx, record, nil)
-					}),
-				gocron.AfterJobRunsWithError(
-					func(jobID uuid.UUID, jobName string, err error) {
-						record := models.ScheduleActionRecord{
-							JobName:     job.Name,
-							Action:      copiedAction,
-							Status:      models.Failed,
-							ScheduledAt: scheduledAt.Load(),
-						}
-						m.addScheduleActionRecord(ctx, record, err)
-					}),
-			))
-
-			// A "ScheduleAction" will be treated as a "Job" in gocron scheduler
-			_, err := scheduler.NewJob(definition, task, jobOptions...)
-			if err != nil {
-				return errors.NewCommonEdgeX(errors.KindServerError,
-					fmt.Sprintf("failed to create new scheduled aciton for job: %s", job.Name), err)
-			}
-		}
-
-		scheduler.Start()
 		m.lc.Debugf("The scheduled job %s was started. Correlation-ID: %s", job.Name, correlationId)
 	}
 
@@ -339,6 +263,107 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 	m.mu.Unlock()
 
 	return nil
+}
+
+// startJobActions registers a gocron job for every action of the schedule job and starts the scheduler. It
+// resolves the window timezone once and builds the shared base options and window gate reused by each action.
+func (m *manager) startJobActions(ctx context.Context, scheduler gocron.Scheduler, definition gocron.JobDefinition,
+	job models.ScheduleJob, startOption, endOption gocron.JobOption) errors.EdgeX {
+	window := job.Definition.GetBaseScheduleDef().ActiveYearlyTimeWindow
+
+	// Resolve the timezone once so the window is evaluated against the schedule's calendar day.
+	windowLoc := time.Local
+	if window != nil {
+		loc, err := action.WindowLocation(job.Definition)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid,
+				fmt.Sprintf("failed to resolve timezone for active yearly time window of job: %s", job.Name), err)
+		}
+		windowLoc = loc
+	}
+
+	// Options shared by every action's gocron job (start/stop lifetime plus the window gate).
+	var baseOptions []gocron.JobOption
+	if startOption != nil {
+		baseOptions = append(baseOptions, startOption)
+	}
+	if endOption != nil {
+		baseOptions = append(baseOptions, endOption)
+	}
+	gate := m.windowGate(job, window, windowLoc)
+
+	for _, a := range job.Actions {
+		if edgeXerr := m.addActionJob(ctx, scheduler, definition, job, a, baseOptions, gate); edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	}
+
+	scheduler.Start()
+	return nil
+}
+
+// addActionJob creates a gocron job for a single ScheduleAction with its own event listeners (window gate,
+// scheduledAt capture, and success/failure record writers) and registers it on the scheduler. baseOptions
+// holds the job-level options (lifetime start/stop) shared by every action; gate is the window gate listener.
+func (m *manager) addActionJob(ctx context.Context, scheduler gocron.Scheduler, definition gocron.JobDefinition,
+	job models.ScheduleJob, a models.ScheduleAction, baseOptions []gocron.JobOption, gate gocron.EventListener) errors.EdgeX {
+	task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	jobOptions := slices.Clone(baseOptions)
+
+	// Capture the scheduled time in BeforeJobRuns to avoid race condition
+	// where the job may be removed from the scheduler before AfterJobRuns fires.
+	var scheduledAt atomic.Int64
+	jobOptions = append(jobOptions, gocron.WithEventListeners(
+		gate,
+		gocron.BeforeJobRuns(
+			func(jobID uuid.UUID, jobName string) {
+				scheduledAt.Store(time.Now().UnixMilli())
+			}),
+		gocron.AfterJobRuns(
+			func(jobID uuid.UUID, jobName string) {
+				m.addScheduleActionRecord(ctx, models.ScheduleActionRecord{
+					JobName:     job.Name,
+					Action:      a,
+					Status:      models.Succeeded,
+					ScheduledAt: scheduledAt.Load(),
+				}, nil)
+			}),
+		gocron.AfterJobRunsWithError(
+			func(jobID uuid.UUID, jobName string, err error) {
+				m.addScheduleActionRecord(ctx, models.ScheduleActionRecord{
+					JobName:     job.Name,
+					Action:      a,
+					Status:      models.Failed,
+					ScheduledAt: scheduledAt.Load(),
+				}, err)
+			}),
+	))
+
+	// A "ScheduleAction" will be treated as a "Job" in gocron scheduler
+	if _, err := scheduler.NewJob(definition, task, jobOptions...); err != nil {
+		return errors.NewCommonEdgeX(errors.KindServerError,
+			fmt.Sprintf("failed to create new scheduled aciton for job: %s", job.Name), err)
+	}
+	return nil
+}
+
+// windowGate returns a before-run listener that skips the run (without writing a record) when the current
+// time, evaluated in windowLoc, is outside the job's active yearly time window. A nil window never skips.
+func (m *manager) windowGate(job models.ScheduleJob, window *models.ActiveYearlyTimeWindow, windowLoc *time.Location) gocron.EventListener {
+	return gocron.BeforeJobRunsSkipIfBeforeFuncErrors(
+		func(jobID uuid.UUID, jobName string) error {
+			now := time.Now().In(windowLoc)
+			if window != nil && !action.InWindow(now, *window) {
+				m.lc.Debugf("Skipping scheduled run of job %s on %s: current date is outside its active yearly time window (%d/%d - %d/%d)",
+					job.Name, now.Format("2006-01-02"), window.StartMonth, window.StartDay, window.EndMonth, window.EndDay)
+				return errOutsideWindow
+			}
+			return nil
+		})
 }
 
 func (m *manager) addScheduleActionRecord(ctx context.Context, record models.ScheduleActionRecord, err error) {
