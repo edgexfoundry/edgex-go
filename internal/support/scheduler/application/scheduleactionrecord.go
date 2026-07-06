@@ -8,7 +8,6 @@ package application
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -259,7 +258,7 @@ func generateMissedRuns(def models.ScheduleDef, latestTime time.Time) (missedRun
 			return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast ScheduleDefinition to CronScheduleDef", nil)
 		}
 
-		cronSchedule, err := parseCronExpression(cronDef.Crontab)
+		cronSchedule, err := action.ParseCronExpression(cronDef.Crontab)
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to parse cron expression", err)
 		}
@@ -296,23 +295,6 @@ func findMissedCronRuns(lastRun, current time.Time, schedule cron.Schedule) (mis
 		missedRuns = append(missedRuns, t)
 	}
 	return missedRuns
-}
-
-func parseCronExpression(cronExpr string) (cron.Schedule, error) {
-	var withLocation string
-	if strings.HasPrefix(cronExpr, "TZ=") || strings.HasPrefix(cronExpr, "CRON_TZ=") {
-		withLocation = cronExpr
-	} else {
-		withLocation = fmt.Sprintf("CRON_TZ=%s %s", time.Local.String(), cronExpr)
-	}
-
-	// An optional 6th field is used at the beginning since withSeconds is set to true: `* * * * * *`
-	p := cron.NewParser(cron.SecondOptional | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
-	schedule, err := p.Parse(withLocation)
-	if err != nil {
-		return nil, err
-	}
-	return schedule, nil
 }
 
 func purgeRecord(ctx context.Context, dic *di.Container) errors.EdgeX {

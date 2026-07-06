@@ -247,19 +247,21 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
-	var jobOptions []gocron.JobOption
-
 	// Add options for the scheduled job based on the startTimestamp and endTimestamp
 	toTrigger, startOption, endOption := m.arrangeScheduleJob(ctx, job)
 	if toTrigger {
-		if startOption != nil {
-			jobOptions = append(jobOptions, startOption)
-		}
-		if endOption != nil {
-			jobOptions = append(jobOptions, endOption)
-		}
-
 		window := job.Definition.GetBaseScheduleDef().ActiveYearlyTimeWindow
+
+		// Resolve the timezone once so the window is evaluated against the schedule's calendar day.
+		windowLoc := time.Local
+		if window != nil {
+			loc, err := action.WindowLocation(job.Definition)
+			if err != nil {
+				return errors.NewCommonEdgeX(errors.KindContractInvalid,
+					fmt.Sprintf("failed to resolve timezone for active yearly time window of job: %s", job.Name), err)
+			}
+			windowLoc = loc
+		}
 
 		// If toTrigger is true, the ScheduleAction will be added to the scheduler and ready to be triggered
 		for _, a := range job.Actions {
@@ -267,6 +269,14 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 			task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
 			if edgeXerr != nil {
 				return errors.NewCommonEdgeXWrapper(edgeXerr)
+			}
+
+			var jobOptions []gocron.JobOption
+			if startOption != nil {
+				jobOptions = append(jobOptions, startOption)
+			}
+			if endOption != nil {
+				jobOptions = append(jobOptions, endOption)
 			}
 
 			// Capture the scheduled time in BeforeJobRuns to avoid race condition
@@ -277,7 +287,7 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 				// Returning an error makes gocron skip before the task fires and writes no record.
 				gocron.BeforeJobRunsSkipIfBeforeFuncErrors(
 					func(jobID uuid.UUID, jobName string) error {
-						now := time.Now()
+						now := time.Now().In(windowLoc)
 						if window != nil && !action.InWindow(now, *window) {
 							m.lc.Debugf("Skipping scheduled run of job %s on %s: current date is outside its active yearly time window (%d/%d - %d/%d)",
 								job.Name, now.Format("2006-01-02"), window.StartMonth, window.StartDay, window.EndMonth, window.EndDay)

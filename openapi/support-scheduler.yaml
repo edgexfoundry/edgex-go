@@ -262,8 +262,9 @@ components:
           type: integer
           description: "The end timestamp of the schedule job, in milliseconds."
         activeYearlyTimeWindow:
+          allOf:
+            - $ref: '#/components/schemas/ActiveYearlyTimeWindow'
           description: "An optional recurring within-year active period. When omitted, the schedule has no window constraint and fires on every tick within its lifetime."
-          $ref: '#/components/schemas/ActiveYearlyTimeWindow'
       required:
         - type
     ActiveYearlyTimeWindow:

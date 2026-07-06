@@ -75,7 +75,7 @@ func TestFindMissedIntervalRuns(t *testing.T) {
 
 func TestFindMissedCronRuns(t *testing.T) {
 	// Take the "0 * * * *" as an example, which means the job will run every hour
-	cronSchedule, _ := parseCronExpression("0 * * * *")
+	cronSchedule, _ := action.ParseCronExpression("0 * * * *")
 
 	tests := []struct {
 		name         string
