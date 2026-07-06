@@ -179,7 +179,7 @@ func TestGenerateMissedScheduleActionRecords_ActiveYearlyTimeWindow(t *testing.T
 
 	// Every recorded run must fall inside the window, and its status must be Missed.
 	for _, r := range filtered {
-		runTime := time.UnixMilli(r.ScheduledAt)
+		runTime := time.UnixMilli(r.ScheduledAt).In(time.Local)
 		assert.True(t, action.InWindow(runTime, *window),
 			"recorded missed run %s is outside the window and should have been dropped", runTime)
 		assert.Equal(t, models.Missed, string(r.Status))
@@ -191,7 +191,7 @@ func TestGenerateMissedScheduleActionRecords_ActiveYearlyTimeWindow(t *testing.T
 		inFiltered[r.ScheduledAt] = true
 	}
 	for _, r := range baseline {
-		if !action.InWindow(time.UnixMilli(r.ScheduledAt), *window) {
+		if !action.InWindow(time.UnixMilli(r.ScheduledAt).In(time.Local), *window) {
 			assert.False(t, inFiltered[r.ScheduledAt], "an out-of-window run leaked into the filtered set")
 		}
 	}

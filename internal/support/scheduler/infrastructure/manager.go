@@ -346,7 +346,7 @@ func (m *manager) addActionJob(ctx context.Context, scheduler gocron.Scheduler, 
 	// A "ScheduleAction" will be treated as a "Job" in gocron scheduler
 	if _, err := scheduler.NewJob(definition, task, jobOptions...); err != nil {
 		return errors.NewCommonEdgeX(errors.KindServerError,
-			fmt.Sprintf("failed to create new scheduled aciton for job: %s", job.Name), err)
+			fmt.Sprintf("failed to create new scheduled action for job: %s", job.Name), err)
 	}
 	return nil
 }
