@@ -1,13 +1,14 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2026 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
 package infrastructure
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v4/config"
@@ -97,6 +98,23 @@ func validScheduleJob() models.ScheduleJob {
 		AdminState: models.Unlocked,
 		Labels:     []string{testLabel},
 	}
+}
+
+// TestAddScheduleJobWithActiveYearlyTimeWindow verifies that a job carrying an ActiveYearlyTimeWindow is
+// added without error, i.e. the before-run window gate is wired into the scheduler correctly. The window
+// matching logic itself is covered by action.TestInWindow.
+func TestAddScheduleJobWithActiveYearlyTimeWindow(t *testing.T) {
+	dic := mockDic()
+	mockManager := NewManager(dic)
+
+	def := testIntervalScheduleDef
+	def.ActiveYearlyTimeWindow = &models.ActiveYearlyTimeWindow{StartMonth: 11, StartDay: 1, EndMonth: 2, EndDay: 28}
+
+	job := validScheduleJob()
+	job.Definition = def
+
+	err := mockManager.AddScheduleJob(job, testCorrelationID)
+	assert.NoError(t, err)
 }
 
 func TestValidateUpdatingScheduleJob(t *testing.T) {

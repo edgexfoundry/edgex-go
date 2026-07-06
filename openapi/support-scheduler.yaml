@@ -261,8 +261,44 @@ components:
         endTimestamp:
           type: integer
           description: "The end timestamp of the schedule job, in milliseconds."
+        activeYearlyTimeWindow:
+          allOf:
+            - $ref: '#/components/schemas/ActiveYearlyTimeWindow'
+          description: "An optional recurring within-year active period. When omitted, the schedule has no window constraint and fires on every tick within its lifetime."
       required:
         - type
+    ActiveYearlyTimeWindow:
+      description: >-
+        An optional yearly active period for the schedule job, given as a start and end month/day.
+        The job runs only on dates within this period each year, and is skipped outside it.
+        For example, a start of Nov 15 and end of Feb 10 keeps the job active every winter.
+      type: object
+      properties:
+        startMonth:
+          type: integer
+          description: "The month the active period starts (1-12)."
+          minimum: 1
+          maximum: 12
+        startDay:
+          type: integer
+          description: "The day of the month the active period starts (1-31)."
+          minimum: 1
+          maximum: 31
+        endMonth:
+          type: integer
+          description: "The month the active period ends (1-12)."
+          minimum: 1
+          maximum: 12
+        endDay:
+          type: integer
+          description: "The last day of the month included in the active period (1-31)."
+          minimum: 1
+          maximum: 31
+      required:
+        - startMonth
+        - startDay
+        - endMonth
+        - endDay
     ScheduleJob:
       description: "Defines the job to be scheduled."
       type: object
@@ -539,6 +575,11 @@ components:
               startTimestamp: 1724331455000
               endTimestamp: 1724331555000
               crontab: "CRON_TZ=Asia/Taipei 0 0 1 1 *"
+              activeYearlyTimeWindow:
+                startMonth: 11
+                startDay: 1
+                endMonth: 2
+                endDay: 28
             actions:
               - type: "REST"
                 contentType: "application/json"
@@ -673,6 +714,11 @@ components:
               startTimestamp: 1724331455000
               endTimestamp: 1724331555000
               crontab: "CRON_TZ=Asia/Taipei 0 0 1 1 *"
+              activeYearlyTimeWindow:
+                startMonth: 11
+                startDay: 1
+                endMonth: 2
+                endDay: 28
             actions:
               - type: "REST"
                 contentType: "application/json"
@@ -720,6 +766,11 @@ components:
             definition:
               type: "CRON"
               crontab: "CRON_TZ=UTC 0 0 2 2 *"
+              activeYearlyTimeWindow:
+                startMonth: 3
+                startDay: 1
+                endMonth: 5
+                endDay: 31
             actions:
               - type: "REST"
                 contentType: "application/json"
