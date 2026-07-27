@@ -5,10 +5,10 @@ go 1.25.0
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.73
+	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.75
 	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.40
-	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.29
-	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.19
+	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.30
+	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.22
 	github.com/fxamacker/cbor/v2 v2.9.2
 	github.com/go-co-op/gocron/v2 v2.22.0
 	github.com/gomodule/redigo v1.9.3
@@ -32,7 +32,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/ebitengine/purego v0.10.1 // indirect
-	github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.22 // indirect
+	github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.23 // indirect
 	github.com/edgexfoundry/go-mod-registry/v4 v4.1.0-dev.14 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
@@ -137,8 +137,8 @@ require (
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
-	google.golang.org/grpc v1.79.3 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect
+	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	nhooyr.io/websocket v1.8.17 // indirect
 )
