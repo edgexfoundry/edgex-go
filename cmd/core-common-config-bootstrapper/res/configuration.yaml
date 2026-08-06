@@ -132,8 +132,7 @@ device-services:
         OpenZitiController: "openziti:1280"
   Device:
     DataTransform: true
-    MaxCmdOps: 128
-    MaxCmdValueLen: 256
+    MaxCmdOps: 12800
     ProfilesDir: "./res/profiles"
     DevicesDir: "./res/devices"
     # ProvisionWatchersDir is omitted here since most Device Services don't use it.
