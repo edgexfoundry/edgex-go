@@ -32,7 +32,7 @@ RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 COPY . .
 RUN make cmd/support-notifications/support-notifications
 
-FROM alpine:3.22
+FROM alpine:3.23.2
 
 RUN apk add --update --no-cache ca-certificates dumb-init zeromq
 # Ensure using latest versions of all installed packages to avoid any recent CVEs
