@@ -223,13 +223,27 @@ func (dc *DeviceProfileController) DeviceProfileByName(c echo.Context) error {
 	// URL parameters
 	name := c.Param(common.Name)
 
+	// existenceOnly and basicInfoOnly trim the response so callers that do not need the
+	// resources and commands are not charged the bandwidth of a whole profile
+	if utils.ParseQueryStringToString(r, common.ExistenceOnly, common.ValueFalse) == common.ValueTrue {
+		if err := application.CheckDeviceProfileExistsByName(name, dc.dic); err != nil {
+			return utils.WriteErrorResponse(w, ctx, lc, err, "")
+		}
+		utils.WriteHttpHeader(w, ctx, http.StatusOK)
+		return pkg.EncodeAndWriteResponse(commonDTO.NewBaseResponse("", "", http.StatusOK), w, lc)
+	}
+
 	deviceProfile, err := application.DeviceProfileByName(name, ctx, dc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
-	response := responseDTO.NewDeviceProfileResponse("", "", http.StatusOK, deviceProfile)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	if utils.ParseQueryStringToString(r, common.BasicInfoOnly, common.ValueFalse) == common.ValueTrue {
+		return pkg.EncodeAndWriteResponse(responseDTO.NewDeviceProfileBasicInfoResponse("", "", http.StatusOK, deviceProfile.DeviceProfileBasicInfo), w, lc)
+	}
+
+	response := responseDTO.NewDeviceProfileResponse("", "", http.StatusOK, deviceProfile)
 	return pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
 }
 

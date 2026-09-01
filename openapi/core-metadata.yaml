@@ -308,6 +308,18 @@ components:
       description: "A profile basic information"
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
+          description: ID uniquely identifies the device profile, a UUID for example
+        created:
+          type: integer
+          description: Created is a timestamp indicating when the entity was created.
+          readOnly: true
+        modified:
+          type: integer
+          description: Modified is a timestamp indicating when the entity was last modified.
+          readOnly: true
         name:
           type: string
           description: Non-database identifier (must be unique)
@@ -456,6 +468,13 @@ components:
       properties:
         profile:
           $ref: '#/components/schemas/DeviceProfile'
+    DeviceProfileBasicInfoResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        profile:
+          $ref: '#/components/schemas/DeviceProfileBasicInfo'
     MultiDeviceProfilesResponse:
       allOf:
         - $ref: '#/components/schemas/BaseWithTotalCountResponse'
@@ -1234,6 +1253,22 @@ components:
         type: boolean
         default: false
       description: "Indicates whether to force add the device if device name already exists."
+    existenceOnlyParam:
+      in: query
+      name: existenceOnly
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: "Indicates whether the response returns only the existence of the requested entity, omitting its content. Takes precedence over basicInfoOnly."
+    basicInfoOnlyParam:
+      in: query
+      name: basicInfoOnly
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: "Indicates whether the response returns only the basic info of the requested entity, omitting its device resources and commands."
   headers:
     correlatedResponseHeader:
       description: "A response header that returns the unique correlation ID used to initiate the request."
@@ -2654,6 +2689,10 @@ paths:
         description: "The unique name of a device profile"
     get:
       summary: "Returns a device profile by its name"
+      description: "By default the whole profile is returned. Callers that do not need the device resources and commands can trim the response with existenceOnly or basicInfoOnly to save bandwidth. A profile that does not exist is reported as 404 in every mode."
+      parameters:
+        - $ref: '#/components/parameters/existenceOnlyParam'
+        - $ref: '#/components/parameters/basicInfoOnlyParam'
       responses:
         '200':
           description: "OK"
@@ -2663,34 +2702,81 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
-              example:
-               apiVersion: "v3"
-               requestId: "374387ad-18ef-4f5c-8b67-6844bec31310"
-               statusCode: 200
-               profile:
-                id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
-                name: ""
-                description: "Example of Device-Virtual"
-                created: 1600927134904
-                modified: 1600927134904
-                manufacturer: "IOTech"
-                model: "Device-Virtual-01"
-                labels:
-                  - device-virtual-example
-                deviceResources:
-                  - description: "Generate random float32 value"
-                    name: "Float32"
-                    properties:
-                      valueType: "Float32"
-                      readWrite: "RW"
-                      defaultValue: "0"
-                deviceCommands:
-                  - name: "Float32"
-                    readWrite: "RW"
-                    resourceOperations:
-                      - deviceResource: "Float32"
-                linkedDeviceCount: 1
+                # the query params decide which shape comes back, and the basic info is a subset
+                # of the whole profile, so each branch states what makes it the only match
+                oneOf:
+                  - allOf:
+                      - $ref: '#/components/schemas/DeviceProfileResponse'
+                      - required: [profile]
+                        properties:
+                          profile:
+                            required: [deviceResources, deviceCommands]
+                  - allOf:
+                      - $ref: '#/components/schemas/DeviceProfileBasicInfoResponse'
+                      - required: [profile]
+                        properties:
+                          profile:
+                            not:
+                              anyOf:
+                                - required: [deviceResources]
+                                - required: [deviceCommands]
+                  - allOf:
+                      - $ref: '#/components/schemas/BaseResponse'
+                      - not:
+                          required: [profile]
+              examples:
+                wholeProfile:
+                  summary: "Default: the whole profile"
+                  value:
+                    apiVersion: "v3"
+                    requestId: "374387ad-18ef-4f5c-8b67-6844bec31310"
+                    statusCode: 200
+                    profile:
+                      id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
+                      name: "Device-Virtual-Profile"
+                      description: "Example of Device-Virtual"
+                      created: 1600927134904
+                      modified: 1600927134904
+                      manufacturer: "IOTech"
+                      model: "Device-Virtual-01"
+                      labels:
+                        - device-virtual-example
+                      deviceResources:
+                        - description: "Generate random float32 value"
+                          name: "Float32"
+                          properties:
+                            valueType: "Float32"
+                            readWrite: "RW"
+                            defaultValue: "0"
+                      deviceCommands:
+                        - name: "Float32"
+                          readWrite: "RW"
+                          resourceOperations:
+                            - deviceResource: "Float32"
+                      linkedDeviceCount: 1
+                basicInfoOnly:
+                  summary: "basicInfoOnly=true: no device resources or commands"
+                  value:
+                    apiVersion: "v3"
+                    requestId: "374387ad-18ef-4f5c-8b67-6844bec31310"
+                    statusCode: 200
+                    profile:
+                      id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
+                      name: "Device-Virtual-01"
+                      description: "Example of Device-Virtual"
+                      created: 1600927134904
+                      modified: 1600927134904
+                      manufacturer: "IOTech"
+                      model: "Device-Virtual-01"
+                      labels:
+                        - device-virtual-example
+                      linkedDeviceCount: 1
+                existenceOnly:
+                  summary: "existenceOnly=true: no profile field at all"
+                  value:
+                    apiVersion: "v3"
+                    requestId: "374387ad-18ef-4f5c-8b67-6844bec31310"
+                    statusCode: 200
         '400':
           description: "Request is in an invalid state"
           headers:

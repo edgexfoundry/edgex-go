@@ -123,6 +123,22 @@ func DeviceProfileByName(name string, ctx context.Context, dic *di.Container) (d
 	return deviceProfile, nil
 }
 
+// CheckDeviceProfileExistsByName returns an EntityDoesNotExist error if no device profile carries the name.
+// It reads no profile content, so callers that only need existence avoid transferring the whole profile.
+func CheckDeviceProfileExistsByName(name string, dic *di.Container) errors.EdgeX {
+	if name == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	exists, err := container.DBClientFrom(dic.Get).DeviceProfileNameExists(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	if !exists {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("no device profile with name '%s' found", name), nil)
+	}
+	return nil
+}
+
 // DeleteDeviceProfileByName delete the device profile by name
 func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
 	strictProfileDeletes := container.ConfigurationFrom(dic.Get).Writable.ProfileChange.StrictDeviceProfileDeletes
