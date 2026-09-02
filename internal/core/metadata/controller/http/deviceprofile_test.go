@@ -1724,3 +1724,64 @@ func TestPatchDeviceProfileTags(t *testing.T) {
 		})
 	}
 }
+
+func TestPatchDeviceProfileTags_DeleteTag(t *testing.T) {
+	const deletedKey = "TestTagKey"
+	const keptKey = "KeptTagKey"
+	// the profile must start with several tags, otherwise deleting one is indistinguishable
+	// from the no-op of patching an empty map
+	startingTags := func() map[string]any {
+		return map[string]any{deletedKey: "TestTagValue", keptKey: "KeptTagValue"}
+	}
+	deviceProfile := models.DeviceProfile{
+		Name:            TestDeviceProfileName,
+		DeviceResources: []models.DeviceResource{{Name: TestDeviceResourceName, Tags: startingTags()}},
+		DeviceCommands:  []models.DeviceCommand{{Name: TestDeviceCommandName, Tags: startingTags()}},
+	}
+
+	testReq := requests.DeviceProfileTagsRequest{
+		BaseRequest: commonDTO.BaseRequest{
+			Versionable: commonDTO.NewVersionable(),
+			RequestId:   ExampleUUID,
+		},
+		UpdateDeviceProfileTags: dtos.UpdateDeviceProfileTags{
+			DeviceResources: []dtos.UpdateTags{{Name: TestDeviceResourceName, Tags: map[string]any{deletedKey: nil}}},
+			DeviceCommands:  []dtos.UpdateTags{{Name: TestDeviceCommandName, Tags: map[string]any{deletedKey: nil}}},
+		},
+	}
+
+	dic := mockDic()
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeviceProfileByName", deviceProfile.Name).Return(deviceProfile, nil)
+	// reached by the system event goroutine that PatchDeviceProfileTags fires off
+	dbClientMock.On("DevicesByProfileName", 0, -1, deviceProfile.Name).Return([]models.Device{}, nil)
+	dbClientMock.On("DeviceCountByProfileName", deviceProfile.Name).Return(int64(0), nil)
+	var updated models.DeviceProfile
+	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil).Run(func(args mock.Arguments) {
+		updated = args.Get(0).(models.DeviceProfile)
+	})
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceProfileController(dic)
+	require.NotNil(t, controller)
+
+	jsonData, err := json.Marshal(testReq)
+	require.NoError(t, err)
+	req, err := http.NewRequest(http.MethodPatch, common.ApiDeviceProfileTagsByNameRoute, strings.NewReader(string(jsonData)))
+	require.NoError(t, err)
+
+	recorder := httptest.NewRecorder()
+	c := echo.New().NewContext(req, recorder)
+	c.SetParamNames(common.Name)
+	c.SetParamValues(deviceProfile.Name)
+	require.NoError(t, controller.PatchDeviceProfileTags(c))
+	require.Equal(t, http.StatusOK, recorder.Result().StatusCode)
+
+	expectedTags := map[string]any{keptKey: "KeptTagValue"}
+	assert.Equal(t, expectedTags, updated.DeviceResources[0].Tags, "device resource tag was not deleted")
+	assert.Equal(t, expectedTags, updated.DeviceCommands[0].Tags, "device command tag was not deleted")
+}
