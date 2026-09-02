@@ -358,12 +358,13 @@ components:
           description: device resource or device command name
         tags:
           type: object
-          description: A map of tags to add or update
+          minProperties: 1
+          description: "A map of tags to add or update. A tag whose value is null is deleted instead, nested keys included. The map itself must not be empty."
       required:
         - name
         - tags
     DeviceProfileTagsRequest:
-      description: "Add/Update tags of device resources/device commands in an existing profile"
+      description: "Add/Update/Remove tags of device resources/device commands in an existing profile"
       type: object
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -2886,7 +2887,7 @@ paths:
           type: string
         description: "The unique name of a device profile"
     patch:
-      summary: "Allows adding or updating the tags field for device resources or device commands within an existing device profile. Removing existing tags is not supported."
+      summary: "Allows adding, updating or removing the tags field for device resources or device commands within an existing device profile. A tag whose value is null is removed, nested keys included. Clearing all tags at once is not supported, as an empty tags map is rejected."
       requestBody:
         required: true
         content:
@@ -2901,11 +2902,13 @@ paths:
                 - name: "Float32"
                   tags:
                     tag1: "field1Value"
+                    tag2ToRemove: null
               deviceCommands:
                 - name: "Float32"
                   tags:
                     tag2:
                       field3: "field3Value"
+                      field4ToRemove: null
       responses:
         '200':
           description: "Update successful"
