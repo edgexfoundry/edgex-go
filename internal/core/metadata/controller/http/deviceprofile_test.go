@@ -1108,6 +1108,124 @@ func TestDeviceProfileByName(t *testing.T) {
 	}
 }
 
+func TestDeviceProfileByNameExistenceOnly(t *testing.T) {
+	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	notFoundName := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeviceProfileNameExists", deviceProfile.Name).Return(true, nil)
+	dbClientMock.On("DeviceProfileNameExists", notFoundName).Return(false, nil)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceProfileController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		deviceProfileName  string
+		expectedStatusCode int
+	}{
+		{"Valid - profile exists", deviceProfile.Name, http.StatusOK},
+		{"Invalid - profile not found", notFoundName, http.StatusNotFound},
+		{"Invalid - name parameter is empty", "", http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			recorder := runDeviceProfileByName(t, controller, testCase.deviceProfileName, common.ExistenceOnly)
+
+			var res commonDTO.BaseResponse
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &res))
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode)
+			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode))
+			// the whole point of existenceOnly is that no profile content is sent back
+			assert.NotContains(t, recorder.Body.String(), "\"profile\"")
+			assert.NotContains(t, recorder.Body.String(), "deviceResources")
+		})
+	}
+
+	// existence must be answered without reading the profile itself
+	dbClientMock.AssertNotCalled(t, "DeviceProfileByName", mock.Anything)
+}
+
+func TestDeviceProfileByNameBasicInfoOnly(t *testing.T) {
+	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	require.NotEmpty(t, deviceProfile.DeviceResources, "fixture must carry resources for the trimming to be observable")
+
+	dic := mockDic()
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeviceProfileByName", deviceProfile.Name).Return(deviceProfile, nil)
+	dbClientMock.On("DeviceCountByProfileName", deviceProfile.Name).Return(int64(1), nil)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceProfileController(dic)
+	require.NotNil(t, controller)
+
+	recorder := runDeviceProfileByName(t, controller, deviceProfile.Name, common.BasicInfoOnly)
+
+	var res responseDTO.DeviceProfileBasicInfoResponse
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &res))
+	assert.Equal(t, http.StatusOK, recorder.Result().StatusCode)
+	assert.Equal(t, deviceProfile.Name, res.Profile.Name)
+	assert.Equal(t, int64(1), res.Profile.LinkedDeviceCount)
+	assert.NotContains(t, recorder.Body.String(), "deviceResources")
+	assert.NotContains(t, recorder.Body.String(), "deviceCommands")
+}
+
+// The API documents existenceOnly as taking precedence over basicInfoOnly, so the two
+// query params must not be order-dependent on how the handler happens to be written.
+func TestDeviceProfileByNameExistenceOnlyTakesPrecedence(t *testing.T) {
+	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+
+	dic := mockDic()
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeviceProfileNameExists", deviceProfile.Name).Return(true, nil)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceProfileController(dic)
+	require.NotNil(t, controller)
+
+	recorder := runDeviceProfileByName(t, controller, deviceProfile.Name, common.BasicInfoOnly, common.ExistenceOnly)
+
+	assert.Equal(t, http.StatusOK, recorder.Result().StatusCode)
+	// existenceOnly won, so there is no profile field at all
+	assert.NotContains(t, recorder.Body.String(), "profile")
+	// the basic info was never fetched, which only holds if existenceOnly short-circuited first
+	dbClientMock.AssertNotCalled(t, "DeviceProfileByName", deviceProfile.Name)
+}
+
+// runDeviceProfileByName issues GET .../name/<name> against the controller, setting each of the
+// given query params to true. Pass none to request the full profile.
+func runDeviceProfileByName(t *testing.T, controller *DeviceProfileController, name string, queryParams ...string) *httptest.ResponseRecorder {
+	t.Helper()
+	reqPath := fmt.Sprintf("%s/%s/%s", common.ApiDeviceProfileRoute, common.Name, name)
+	for i, queryParam := range queryParams {
+		separator := "&"
+		if i == 0 {
+			separator = "?"
+		}
+		reqPath = fmt.Sprintf("%s%s%s=%s", reqPath, separator, queryParam, common.ValueTrue)
+	}
+	req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+	require.NoError(t, err)
+
+	recorder := httptest.NewRecorder()
+	c := echo.New().NewContext(req, recorder)
+	c.SetParamNames(common.Name)
+	c.SetParamValues(name)
+	require.NoError(t, controller.DeviceProfileByName(c))
+	return recorder
+}
+
 func TestDeleteDeviceProfileByName(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	noName := ""
