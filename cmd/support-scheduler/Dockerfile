@@ -30,7 +30,7 @@ RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 COPY . .
 RUN make cmd/support-scheduler/support-scheduler
 
-FROM alpine:3.22
+FROM alpine:3.23.2
 
 RUN apk add --update --no-cache ca-certificates dumb-init tzdata
 # Ensure using latest versions of all installed packages to avoid any recent CVEs
