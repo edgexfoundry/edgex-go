@@ -22,7 +22,7 @@ FROM ${BUILDER_BASE} AS builder
 FROM ghcr.io/spiffe/spire-server:1.13.3 as spire_server
 
 # Deployment image
-FROM alpine:3.22
+FROM alpine:3.23.2
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
