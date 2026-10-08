@@ -1,0 +1,10 @@
+name: Dev Tag
+on:
+  push:
+    branches: [main]
+jobs:
+  dev-tag:
+    if: github.repository_owner == 'edgexfoundry'
+    uses: edgexfoundry/edgex-global-pipelines/.github/workflows/dev-tag.yml@stable
+    permissions:
+      contents: write
