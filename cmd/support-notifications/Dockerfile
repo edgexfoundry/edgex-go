@@ -17,7 +17,7 @@
 # 
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.25-alpine3.22
+ARG BUILDER_BASE=golang:1.27-alpine3.24
 FROM ${BUILDER_BASE} AS builder
 
 ARG ADD_BUILD_TAGS=""
@@ -32,7 +32,7 @@ RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 COPY . .
 RUN make cmd/support-notifications/support-notifications
 
-FROM alpine:3.22
+FROM alpine:3.24
 
 RUN apk add --update --no-cache ca-certificates dumb-init zeromq
 # Ensure using latest versions of all installed packages to avoid any recent CVEs

@@ -52,7 +52,7 @@ func SendRequestWithRESTAddress(lc logger.LoggingClient, content string, content
 }
 
 func SendRequestAndGetResponse(client *http.Client, req *http.Request) (res string, edgeXerr errors.EdgeX) {
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) // nolint:gosec // REST target address is user-configured by design
 
 	if err != nil {
 		return "", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the HTTP request", err)

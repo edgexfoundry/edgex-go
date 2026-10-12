@@ -16,13 +16,13 @@
 #  ----------------------------------------------------------------------------------
 
 # Build utility container
-ARG BUILDER_BASE=golang:1.25-alpine3.22
+ARG BUILDER_BASE=golang:1.27-alpine3.24
 FROM ${BUILDER_BASE} AS builder
 
 FROM ghcr.io/spiffe/spire-server:1.13.3 as spire_server
 
 # Deployment image
-FROM alpine:3.22
+FROM alpine:3.24
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'

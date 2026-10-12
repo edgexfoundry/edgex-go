@@ -100,7 +100,7 @@ func (c *cmd) Execute() (statusCode int, err error) {
 
 	// Output credentials for new account
 
-	err = json.NewEncoder(os.Stdout).Encode(credentials)
+	err = json.NewEncoder(os.Stdout).Encode(credentials) // nolint:gosec // printing the new user's credentials is the purpose of this command
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, err
 	}

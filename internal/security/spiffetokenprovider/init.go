@@ -282,7 +282,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		if rawTokenOnly {
 			w.Header().Add("Content-Type", "text/plain")
 			rawToken := ((vaultTokenResponse).(map[string]interface{})["auth"]).(map[string]interface{})["client_token"].(string)
-			if _, err := io.WriteString(w, rawToken); err != nil {
+			if _, err := io.WriteString(w, rawToken); err != nil { // nolint:gosec // token is written as text/plain
 				lc.Errorf("Could not write output: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
