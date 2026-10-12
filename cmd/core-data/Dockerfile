@@ -19,7 +19,7 @@
 #  ----------------------------------------------------------------------------------
 
 # Docker image for Golang Core Data micro service
-ARG BUILDER_BASE=golang:1.25-alpine3.22
+ARG BUILDER_BASE=golang:1.27-alpine3.24
 FROM ${BUILDER_BASE} AS builder
 
 ARG ADD_BUILD_TAGS=""
@@ -35,7 +35,7 @@ COPY . .
 RUN make -e ADD_BUILD_TAGS=$ADD_BUILD_TAGS cmd/core-data/core-data
 
 #Next image - Copy built Go binary into new workspace
-FROM alpine:3.22
+FROM alpine:3.24
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Dell, Cavium, Copyright (c) 2023: Intel Corporation'

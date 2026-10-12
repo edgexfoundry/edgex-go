@@ -8,6 +8,7 @@ package channel
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -126,6 +127,9 @@ func (sender *MQTTSender) Send(notification models.Notification, address models.
 	mqttAddress, ok := address.(models.MQTTPubAddress)
 	if !ok {
 		return "", errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to MQTTPubAddress", nil)
+	}
+	if mqttAddress.QoS < 0 || mqttAddress.QoS > 2 {
+		return "", errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid MQTT QoS %d, must be 0, 1 or 2", mqttAddress.QoS), nil)
 	}
 
 	client, err := sender.prepareMqttClient(mqttAddress)

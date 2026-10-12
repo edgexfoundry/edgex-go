@@ -49,7 +49,7 @@ func TestPasswordConfigNotInitialized(t *testing.T) {
 }
 
 func TestPasswordProviderFailsToStart(t *testing.T) {
-	serviceInfo := config.SecretStoreInfo{
+	serviceInfo := config.SecretStoreInfo{ // nolint:gosec // test fixture
 		PasswordProvider:     "failing-executable",
 		PasswordProviderArgs: []string{"arg1", "arg2"},
 	}
@@ -74,7 +74,7 @@ func TestPasswordProviderFailsToStart(t *testing.T) {
 }
 
 func TestPasswordProviderFailsAtRuntime(t *testing.T) {
-	serviceInfo := config.SecretStoreInfo{
+	serviceInfo := config.SecretStoreInfo{ // nolint:gosec // test fixture
 		PasswordProvider:     "failing-executable",
 		PasswordProviderArgs: []string{"arg1", "arg2"},
 	}

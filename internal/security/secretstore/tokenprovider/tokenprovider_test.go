@@ -104,7 +104,7 @@ func TestSuccess(t *testing.T) {
 }
 
 func TestFailure(t *testing.T) {
-	serviceConfig := config.SecretStoreInfo{
+	serviceConfig := config.SecretStoreInfo{ // nolint:gosec // test fixture
 		TokenProvider:     "failure-executable",
 		TokenProviderType: OneShotProvider,
 		TokenProviderArgs: []string{"arg1", "arg2"},
