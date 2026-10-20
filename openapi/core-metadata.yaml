@@ -1807,10 +1807,10 @@ paths:
   /device:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - $ref: '#/components/parameters/bypassValidationParam'
     post:
       summary: "Allows provisioning of a new device"
       parameters:
+        - $ref: '#/components/parameters/bypassValidationParam'
         - $ref: '#/components/parameters/forceParam'
       requestBody:
         required: true
@@ -1866,6 +1866,8 @@ paths:
                   $ref: '#/components/examples/500Example'
     patch:
       summary: "Allows updates to an existing device"
+      parameters:
+        - $ref: '#/components/parameters/bypassValidationParam'
       requestBody:
         required: true
         content:
