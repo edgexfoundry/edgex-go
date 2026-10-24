@@ -929,3 +929,67 @@ func TestDeleteEventsByAge(t *testing.T) {
 		})
 	}
 }
+
+func TestAddEventSizeWithUnknownContentLength(t *testing.T) {
+	overLimit := testAddEvent
+	overLimit.Event.Readings = []dtos.BaseReading{{
+		DeviceName:   TestDeviceName,
+		ResourceName: TestDeviceResourceName,
+		ProfileName:  TestDeviceProfileName,
+		Origin:       TestOriginTime,
+		ValueType:    common.ValueTypeBinary,
+		BinaryReading: dtos.BinaryReading{
+			BinaryValue: make([]byte, 26000000),
+			MediaType:   TestBinaryReadingMediaType,
+		},
+	}}
+
+	tests := []struct {
+		Name               string
+		Request            requests.AddEventRequest
+		MaxEventSize       int64
+		ExpectedStatusCode int
+	}{
+		{"Invalid - CBOR body over MaxEventSize arriving without a declared Content-Length", overLimit, 25000, http.StatusRequestEntityTooLarge},
+		{"Valid - small CBOR body arriving without a declared Content-Length", testAddEvent, 25000, http.StatusCreated},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.Name, func(t *testing.T) {
+			e := echo.New()
+			dic := mocks.NewMockDIC()
+			app := application.NewCoreDataApp(dic)
+			dic.Update(di.ServiceConstructorMap{
+				container.ConfigurationName: func(get di.Get) interface{} {
+					return &config.ConfigurationStruct{
+						MaxEventSize: testCase.MaxEventSize,
+						Writable:     config.WritableInfo{PersistData: false},
+					}
+				},
+				container.DBClientInterfaceName: func(get di.Get) interface{} {
+					return &dbMock.DBClient{}
+				},
+				application.CoreDataAppName: func(get di.Get) interface{} {
+					return app
+				},
+			})
+			ec := NewEventController(dic)
+			byteData, err := toByteArray(common.ContentTypeCBOR, testCase.Request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(byteData))
+			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameRoute, reader)
+			require.NoError(t, err)
+			req.Header.Set(common.ContentType, common.ContentTypeCBOR)
+			// a chunked request is what the server hands to the handler with an unknown length
+			req.ContentLength = -1
+
+			recorder := httptest.NewRecorder()
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.ServiceName, common.ProfileName, common.DeviceName, common.SourceName)
+			c.SetParamValues(TestServiceName, testCase.Request.Event.ProfileName,
+				testCase.Request.Event.DeviceName, testCase.Request.Event.SourceName)
+			require.NoError(t, ec.AddEvent(c))
+			assert.Equal(t, testCase.ExpectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+		})
+	}
+}
