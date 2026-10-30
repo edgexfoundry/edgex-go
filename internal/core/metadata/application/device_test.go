@@ -8,6 +8,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync"
 	"testing"
 	"time"
@@ -552,4 +553,38 @@ func TestDeviceById(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUpdateDevicePropagatesDeviceByNameError(t *testing.T) {
+	missingName := "deviceDeletedBetweenChecks"
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
+			return logger.NewMockClient()
+		},
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return &config.ConfigurationStruct{
+				Writable: config.WritableInfo{
+					LogLevel: "DEBUG",
+				},
+			}
+		},
+	})
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeviceByName", missingName).Return(models.Device{},
+		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device with name '%s' does not exist", missingName), nil))
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	ctx, _ := correlation.FromContextOrNew(context.Background())
+	id, err := updateDevice(models.Device{Name: missingName}, ctx, dic)
+	require.Error(t, err)
+	require.Empty(t, id)
+	// the force-add path must keep the kind and the reason of the lookup failure, otherwise the
+	// caller of POST /device?force=true gets a message-less 500 for a device that no longer exists
+	require.Equal(t, errors.KindEntityDoesNotExist, errors.Kind(err))
+	require.Equal(t, http.StatusNotFound, err.Code())
+	require.Contains(t, err.Message(), missingName)
 }

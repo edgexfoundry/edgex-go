@@ -125,7 +125,7 @@ func updateDevice(d models.Device, ctx context.Context, dic *di.Container) (id s
 
 	oldDevice, err := dbClient.DeviceByName(d.Name)
 	if err != nil {
-		return "", errors.NewCommonEdgeXWrapper(edgeXerr)
+		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
 	// set the id and created fields from the old device
