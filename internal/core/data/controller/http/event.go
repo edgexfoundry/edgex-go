@@ -95,9 +95,21 @@ func (ec *EventController) AddEvent(c echo.Context) error {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
-	dataBytes, readErr := io.ReadAll(r.Body)
+	// r.ContentLength is -1 when the client sends a chunked body, so the declared length above is
+	// not a guarantee that the limit was enforced: cap the read and judge the size of what arrived.
+	var bodyReader io.Reader = r.Body
+	maxEventBytes := int64(-1)
+	if config.MaxEventSize > 0 {
+		maxEventBytes = config.MaxEventSize * 1024
+		bodyReader = io.LimitReader(r.Body, maxEventBytes+1)
+	}
+	dataBytes, readErr := io.ReadAll(bodyReader)
 	if readErr != nil {
 		err = errors.NewCommonEdgeX(errors.KindIOError, "AddEventRequest I/O reading failed", nil)
+	}
+	if maxEventBytes >= 0 && int64(len(dataBytes)) > maxEventBytes {
+		err = errors.NewCommonEdgeX(errors.KindLimitExceeded, fmt.Sprintf("request size exceed %d KB", config.MaxEventSize), nil)
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	if err == nil {
