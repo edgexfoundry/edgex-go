@@ -904,6 +904,62 @@ func TestAddDeviceProfileByYaml_MissingFile(t *testing.T) {
 	assert.Contains(t, res.Message, "missing yaml file")
 }
 
+func TestAddDeviceProfileByYaml_NotMultipart(t *testing.T) {
+	dic := mockDic()
+
+	controller := NewDeviceProfileController(dic)
+	assert.NotNil(t, controller)
+
+	req, err := http.NewRequest(http.MethodPost, common.ApiDeviceProfileRoute+"/uploadfile", strings.NewReader("invalid body"))
+	require.NoError(t, err)
+	req.Header.Set(common.ContentType, common.ContentTypeJSON)
+
+	e := echo.New()
+	// Act
+	recorder := httptest.NewRecorder()
+	c := e.NewContext(req, recorder)
+	err = controller.AddDeviceProfileByYaml(c)
+	require.NoError(t, err)
+
+	var res commonDTO.BaseWithIdResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &res)
+	require.NoError(t, err)
+
+	// Assert
+	assert.Equal(t, http.StatusBadRequest, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode, "BaseResponse status code not as expected")
+	assert.Contains(t, res.Message, "request Content-Type isn't multipart/form-data")
+}
+
+func TestUpdateDeviceProfileByYaml_NotMultipart(t *testing.T) {
+	dic := mockDic()
+
+	controller := NewDeviceProfileController(dic)
+	assert.NotNil(t, controller)
+
+	req, err := http.NewRequest(http.MethodPut, common.ApiDeviceProfileRoute+"/uploadfile", strings.NewReader("invalid body"))
+	require.NoError(t, err)
+	req.Header.Set(common.ContentType, common.ContentTypeJSON)
+
+	e := echo.New()
+	// Act
+	recorder := httptest.NewRecorder()
+	c := e.NewContext(req, recorder)
+	err = controller.UpdateDeviceProfileByYaml(c)
+	require.NoError(t, err)
+
+	var res commonDTO.BaseWithIdResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &res)
+	require.NoError(t, err)
+
+	// Assert
+	assert.Equal(t, http.StatusBadRequest, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode, "BaseResponse status code not as expected")
+	assert.Contains(t, res.Message, "request Content-Type isn't multipart/form-data")
+}
+
 func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	deviceProfile := buildTestDeviceProfileRequest().Profile
 
