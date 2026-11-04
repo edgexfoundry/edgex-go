@@ -153,6 +153,8 @@ func (dc *DeviceProfileController) AddDeviceProfileByYaml(c echo.Context) error 
 	file, _, fileErr := r.FormFile(yamlFileName)
 	if fileErr == http.ErrMissingFile {
 		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, "missing yaml file", nil), "")
+	} else if fileErr == http.ErrNotMultipart || fileErr == http.ErrMissingBoundary {
+		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, fileErr.Error(), nil), "")
 	} else if fileErr != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServerError, fileErr.Error(), nil), "")
 	}
@@ -188,6 +190,8 @@ func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(c echo.Context) err
 	file, _, fileErr := r.FormFile(yamlFileName)
 	if fileErr == http.ErrMissingFile {
 		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, "missing yaml file", nil), "")
+	} else if fileErr == http.ErrNotMultipart || fileErr == http.ErrMissingBoundary {
+		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, fileErr.Error(), nil), "")
 	} else if fileErr != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServerError, fileErr.Error(), nil), "")
 	}
