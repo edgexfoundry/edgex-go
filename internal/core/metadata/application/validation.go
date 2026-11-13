@@ -38,20 +38,30 @@ const reservedNameRunes = "+#/*.>"
 // enabled the characters are percent-encoded instead and every name is
 // accepted.
 func validateEntityName(name string, escapeEnabled bool) errors.EdgeX {
-	if escapeEnabled {
-		return nil
-	}
-
+	// The empty name check is independent of the escaping safety net: an
+	// escaped name still has to be a name.
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is required", nil)
 	}
 
+	if escapeEnabled {
+		return nil
+	}
+
+	// IndexFunc reports a byte offset, while the offending character has to be
+	// reported as a rune; capture it in the predicate instead of indexing the
+	// rune slice with a byte offset.
+	var reserved rune
 	idx := strings.IndexFunc(name, func(r rune) bool {
-		return unicode.IsSpace(r) || strings.ContainsRune(reservedNameRunes, r)
+		if unicode.IsSpace(r) || strings.ContainsRune(reservedNameRunes, r) {
+			reserved = r
+			return true
+		}
+		return false
 	})
 	if idx >= 0 {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid,
-			fmt.Sprintf("name '%s' contains the reserved character %q; metadata names must not contain whitespace or any of %+q while EnableNameFieldEscape is disabled, because the message-bus topics are built from them", name, []rune(name)[idx], reservedNameRunes), nil)
+			fmt.Sprintf("name '%s' contains the reserved character %q; metadata names must not contain whitespace or any of %+q while EnableNameFieldEscape is disabled, because the message-bus topics are built from them", name, reserved, reservedNameRunes), nil)
 	}
 	return nil
 }

@@ -33,6 +33,9 @@ func TestValidateEntityName(t *testing.T) {
 		{"whitespace", "Device Name", false, true},
 		{"tab", "Device\tName", false, true},
 		{"empty", "", false, true},
+		{"empty with escape enabled", "", true, true},
+		{"reserved after multibyte runes", "哈囉世界+", false, true},
+		{"reserved after multibyte runes with escape", "哈囉世界+", true, false},
 	}
 
 	for _, testCase := range tests {
