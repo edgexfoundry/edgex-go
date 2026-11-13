@@ -80,6 +80,10 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 		}
 	}
 
+	if edgeXerr := validateEntityName(d.Name, config.Service.EnableNameFieldEscape); edgeXerr != nil {
+		return "", errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
 	if config.Writable.MaxDevices > 0 || config.Writable.MaxResources > 0 {
 		if err = checkCapacityWithNewDevice(d, dic); err != nil {
 			return "", errors.NewCommonEdgeXWrapper(err)

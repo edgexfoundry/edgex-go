@@ -30,6 +30,10 @@ func AddProvisionWatcher(pw models.ProvisionWatcher, ctx context.Context, dic *d
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
+	if edgeXerr := validateEntityName(pw.Name, container.ConfigurationFrom(dic.Get).Service.EnableNameFieldEscape); edgeXerr != nil {
+		return "", errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
 	// check the associated ProfileName existence
 	if pw.DiscoveredDevice.ProfileName != "" {
 		exists, err := dbClient.DeviceProfileNameExists(pw.DiscoveredDevice.ProfileName)
