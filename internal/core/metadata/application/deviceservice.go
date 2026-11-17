@@ -28,6 +28,10 @@ func AddDeviceService(d models.DeviceService, ctx context.Context, dic *di.Conta
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
+	if edgeXerr := validateEntityName(d.Name, container.ConfigurationFrom(dic.Get).Service.EnableNameFieldEscape); edgeXerr != nil {
+		return "", errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
 	correlationId := correlation.FromContext(ctx)
 	addedDeviceService, err := dbClient.AddDeviceService(d)
 	if err != nil {

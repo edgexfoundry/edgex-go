@@ -30,6 +30,10 @@ func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Conta
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
+	if edgeXerr := validateEntityName(d.Name, container.ConfigurationFrom(dic.Get).Service.EnableNameFieldEscape); edgeXerr != nil {
+		return "", errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
 	err = deviceProfileUoMValidation(d, dic)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
