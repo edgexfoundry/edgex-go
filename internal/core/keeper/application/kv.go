@@ -41,6 +41,16 @@ func AddKeys(kv models.KVS, isFlatten bool, dic *di.Container) (keys []models.Ke
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
+	if isFlatten {
+		// the database clients derive the child keys from the field names of the
+		// JSON object without applying ValidateKeys to them, so a flatten request
+		// could create keys the API cannot read, update or delete afterwards;
+		// see https://github.com/edgexfoundry/edgex-go/issues/5495
+		if _, err = utils.FlattenKeys(kv.Key, kv.Value); err != nil {
+			return nil, errors.NewCommonEdgeXWrapper(err)
+		}
+	}
+
 	dbClient := container.DBClientFrom(dic.Get)
 	keys, err = dbClient.AddKeeperKeys(kv, isFlatten)
 	if err != nil {
